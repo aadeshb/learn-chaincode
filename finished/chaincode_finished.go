@@ -46,15 +46,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	//If the init function is called, then we send the args to the init command to be stored under the "hello_world" key
 	if function == "init" {
 		return t.Init(stub, "init", args)
-	} 
-	// If the write function is called, then the args are sent to "write" where a seperate key is generated for it based on whatever
-	// args[0] is
-	else if function == "write" {
-		return t.write(stub, args)
-	}
-	//  If the purchaseOrder function is called, then the args are sent to the purchaseOrder function, which is essentially the same thing
-	// as the write function
-	else if function == "purchaseOrder" {
+	} else if function == "supplierInfo" {
+		return t.supplierInfo(stub, args)
+	} else if function == "purchaseOrder" {
 		return t.purchaseOrder(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
