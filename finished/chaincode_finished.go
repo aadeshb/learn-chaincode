@@ -1,19 +1,3 @@
-/*
-Copyright IBM Corp 2016 All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-		 http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package main
 
 import (
@@ -27,6 +11,16 @@ import (
 type SimpleChaincode struct {
 }
 
+type Supplier struct{
+	ObjectType string 	`json:"docType"`
+	Id string 	`json:"id"`
+	foodType string `json:"foodtype"`
+	Amount	string `json:"amount"`
+	Owner 	string	`json:"owner"`
+	Location string `json:"location"`
+	Date string `json:"date"`
+}
+
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
@@ -34,13 +28,19 @@ func main() {
 	}
 }
 
-// Init resets all the things
+// This gives values to the assets we've defined
+func (t*SimpleChaincode) supplierUpdate () {
+	fmt.Println(Supplier{ObjectType: "objtype", Id: "id", foodType: "food", Amount: "amount", Owner: "owner", Location: "loc", Date: "date"})
+
+}
+
+// Init resets all the things, i dont think we need to initialize anything
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	err := stub.PutState("rename_testing", []byte(args[0]))
+	err := stub.PutState("hello_world", []byte(args[0]))
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +49,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 }
 
 // Invoke isur entry point to invoke a chaincode function
+//
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
@@ -62,6 +63,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 	return nil, errors.New("Received unknown function invocation: " + function)
 }
+
+
+
 
 // Query is our entry point for queries
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -79,7 +83,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, value string
-	var third
+	var third string
 	var err error
 	fmt.Println("running write()")
 
@@ -90,7 +94,8 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	key = args[0] //rename for funsies
 	value = args[1]
 	third = args[2]
-	err = stub.PutState(key, []byte(value), third)  //write the variable into the chaincode state
+	err = stub.PutState(key, []byte(value))
+	err = stub.PutState(third, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
