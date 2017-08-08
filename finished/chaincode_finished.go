@@ -27,16 +27,6 @@ import (
 type SimpleChaincode struct {
 }
 
-type Supplier struct{
-	ObjectType string 	`json:"docType"`
-	Id string 	`json:"id"`
-	foodType string `json:"foodtype"`
-	Amount	string `json:"amount"`
-	Owner 	string	`json:"owner"`
-	Location string `json:"location"`
-	Date string `json:"date"`
-}
-
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
@@ -44,20 +34,13 @@ func main() {
 	}
 }
 
-// This gives values to the assets we've defined
-func (t*SimpleChaincode) supplierUpdate () {
-	fmt.Println(Supplier{ObjectType: "objtype", Id: "id", foodType: "food", Amount: "amount", Owner: "owner", Location: "loc", Date: "date"})
-
-}
-
-// Init resets all the things, i dont think we need to initialize anything
+// Init resets all the things
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	err := stub.PutState("hello_world", []byte(args[1]))
+	err := stub.PutState("hello_world", []byte(args[0]))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +49,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 }
 
 // Invoke isur entry point to invoke a chaincode function
-//
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
@@ -80,9 +62,6 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 	return nil, errors.New("Received unknown function invocation: " + function)
 }
-
-
-
 
 // Query is our entry point for queries
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -99,20 +78,17 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	//var key, value string
-	//var third string
+	var key, value string
 	var err error
 	fmt.Println("running write()")
 
-	//if len(args) != 3 {
-	//	return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
-	//}
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	}
 
-	var key = args[0] //rename 
-	var value = args[1]
-	var third = args[2]
-	err = stub.PutState(key, []byte(value))
-	err = stub.PutState(third, []byte(value)) //write the variable into the chaincode state
+	key = args[0] //rename for funsies
+	value = args[1]
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
@@ -124,9 +100,9 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 	var key, jsonResp string
 	var err error
 
-	//if len(args) != 1 {
-	//	return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-	//}
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
+	}
 
 	key = args[0]
 	valAsbytes, err := stub.GetState(key)
