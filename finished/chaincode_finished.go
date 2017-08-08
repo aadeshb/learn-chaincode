@@ -88,7 +88,8 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 
 	key = args[0] //rename for funsies
 	value = args[1]
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	third = args[2]
+	err = stub.PutState(key, []byte(value), third)  //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
