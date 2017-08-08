@@ -82,12 +82,13 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	var err error
 	fmt.Println("running write()")
 
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
-	}
+	//if len(args) != 2 {
+	//	return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	//}
 
-	key = args[0] //rename for funsies
-	value = args[1]
+	length = len(args)
+	key = args[0] //rename 
+	value = args[1:length]
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
