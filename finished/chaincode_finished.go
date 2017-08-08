@@ -4,192 +4,137 @@ import (
 	"errors"
 	"fmt"
 
-	"encoding/json"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
-var logger = shim.NewLogger("mylogger")
-
-type SampleChaincode struct {
+// SimpleChaincode example simple Chaincode implementation
+type SimpleChaincode struct {
 }
 
-//custom data models
-type PersonalInfo struct {
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	DOB       string `json:"DOB"`
-	Email     string `json:"email"`
-	Mobile    string `json:"mobile"`
-}
 
-type FinancialInfo struct {
-	MonthlySalary      int `json:"monthlySalary"`
-	MonthlyRent        int `json:"monthlyRent"`
-	OtherExpenditure   int `json:"otherExpenditure"`
-	MonthlyLoanPayment int `json:"monthlyLoanPayment"`
-}
-
-type LoanApplication struct {
-	ID                     string        `json:"id"`
-	PropertyId             string        `json:"propertyId"`
-	LandId                 string        `json:"landId"`
-	PermitId               string        `json:"permitId"`
-	BuyerId                string        `json:"buyerId"`
-	AppraisalApplicationId string        `json:"appraiserApplicationId"`
-	SalesContractId        string        `json:"salesContractId"`
-	PersonalInfo           PersonalInfo  `json:"personalInfo"`
-	FinancialInfo          FinancialInfo `json:"financialInfo"`
-	Status                 string        `json:"status"`
-	RequestedAmount        int           `json:"requestedAmount"`
-	FairMarketValue        int           `json:"fairMarketValue"`
-	ApprovedAmount         int           `json:"approvedAmount"`
-	ReviewerId             string        `json:"reviewerId"`
-	LastModifiedDate       string        `json:"lastModifiedDate"`
-}
-
-func GetLoanApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	logger.Debug("Entering GetLoanApplication")
-
-	if len(args) < 1 {
-		logger.Error("Invalid number of arguments")
-		return nil, errors.New("Missing loan application ID")
-	}
-
-	var loanApplicationId = args[0]
-	bytes, err := stub.GetState(loanApplicationId)
-	if err != nil {
-		logger.Error("Could not fetch loan application with id "+loanApplicationId+" from ledger", err)
-		return nil, err
-	}
-	return bytes, nil
-}
-
-func CreateLoanApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	logger.Debug("Entering CreateLoanApplication")
-
-	if len(args) < 2 {
-		logger.Error("Invalid number of args")
-		return nil, errors.New("Expected atleast two arguments for loan application creation")
-	}
-
-	var loanApplicationId = args[0]
-	var loanApplicationInput = args[1]
-
-	err := stub.PutState(loanApplicationId, []byte(loanApplicationInput))
-	if err != nil {
-		logger.Error("Could not save loan application to ledger", err)
-		return nil, err
-	}
-
-	var customEvent = "{eventType: 'loanApplicationCreation', description:" + loanApplicationId + "' Successfully created'}"
-	err = stub.SetEvent("evtSender", []byte(customEvent))
-	if err != nil {
-		return nil, err
-	}
-	logger.Info("Successfully saved loan application")
-	return nil, nil
-
-}
-
-/**
-Updates the status of the loan application
-**/
-func UpdateLoanApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	logger.Debug("Entering UpdateLoanApplication")
-
-	if len(args) < 2 {
-		logger.Error("Invalid number of args")
-		return nil, errors.New("Expected atleast two arguments for loan application update")
-	}
-
-	var loanApplicationId = args[0]
-	var status = args[1]
-
-	laBytes, err := stub.GetState(loanApplicationId)
-	if err != nil {
-		logger.Error("Could not fetch loan application from ledger", err)
-		return nil, err
-	}
-	var loanApplication LoanApplication
-	err = json.Unmarshal(laBytes, &loanApplication)
-	loanApplication.Status = status
-
-	laBytes, err = json.Marshal(&loanApplication)
-	if err != nil {
-		logger.Error("Could not marshal loan application post update", err)
-		return nil, err
-	}
-
-	err = stub.PutState(loanApplicationId, laBytes)
-	if err != nil {
-		logger.Error("Could not save loan application post update", err)
-		return nil, err
-	}
-
-	var customEvent = "{eventType: 'loanApplicationUpdate', description:" + loanApplicationId + "' Successfully updated status'}"
-	err = stub.SetEvent("evtSender", []byte(customEvent))
-	if err != nil {
-		return nil, err
-	}
-	logger.Info("Successfully updated loan application")
-	return nil, nil
-
-}
-
-func (t *SampleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	return nil, nil
-}
-
-func (t *SampleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	if function == "GetLoanApplication" {
-		return GetLoanApplication(stub, args)
-	}
-	return nil, nil
-}
-
-func GetCertAttribute(stub shim.ChaincodeStubInterface, attributeName string) (string, error) {
-	logger.Debug("Entering GetCertAttribute")
-	attr, err := stub.ReadCertAttribute(attributeName)
-	if err != nil {
-		return "", errors.New("Couldn't get attribute " + attributeName + ". Error: " + err.Error())
-	}
-	attrString := string(attr)
-	return attrString, nil
-}
-
-func (t *SampleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	if function == "CreateLoanApplication" {
-		username, _ := GetCertAttribute(stub, "username")
-		role, _ := GetCertAttribute(stub, "role")
-		if role == "Bank_Home_Loan_Admin" {
-			return CreateLoanApplication(stub, args)
-		} else {
-			return nil, errors.New(username + " with role " + role + " does not have access to create a loan application")
-		}
-
-	}
-	return nil, nil
-}
-
-type customEvent struct {
-	Type       string `json:"type"`
-	Decription string `json:"description"`
-}
-
+// The main function is used to bootstrap the code, however we don't have any functionality for it right now
+// it only reports if an error occurs, which never should
 func main() {
-
-	lld, _ := shim.LogLevel("DEBUG")
-	fmt.Println(lld)
-
-	logger.SetLevel(lld)
-	fmt.Println(logger.IsEnabledFor(lld))
-
-	err := shim.Start(new(SampleChaincode))
+	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		logger.Error("Could not start SampleChaincode")
-	} else {
-		logger.Info("SampleChaincode successfully started")
+		fmt.Printf("Error starting Simple chaincode: %s", err)
+	}
+}
+
+// Init resets all the things
+func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	//If we are given more than one argument for the init function, then it errors
+	//Init shouldn't need any arguments at all actually
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	}
+	//We are writing some key under the name "hello_world" to the ledger, the hello world is simply a key to hold whatever
+	//argument we pass, if we query "hello_world" with the query function, then it would return whatever argument is placed in args[0]
+	err := stub.PutState("hello_world", []byte(args[0]))
+	if err != nil {
+		return nil, err
 	}
 
+	return nil, nil
+}
+
+// Invoke is the entry point to invoke a chaincode function
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	fmt.Println("invoke is running " + function)
+
+	// Handle different functions
+	//If the init function is called, then we send the args to the init command to be stored under the "hello_world" key
+	if function == "init" {
+		return t.Init(stub, "init", args)
+	} 
+	// If the write function is called, then the args are sent to "write" where a seperate key is generated for it based on whatever
+	// args[0] is
+	else if function == "write" {
+		return t.write(stub, args)
+	}
+	//  If the purchaseOrder function is called, then the args are sent to the purchaseOrder function, which is essentially the same thing
+	// as the write function
+	else if function == "purchaseOrder" {
+		return t.purchaseOrder(stub, args)
+	}
+	fmt.Println("invoke did not find func: " + function)
+
+	return nil, errors.New("Received unknown function invocation: " + function)
+}
+
+// Query is our entry point for queries
+func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	fmt.Println("query is running " + function)
+
+	// Handle different functions
+	// If the read function is called the read function activiates
+	if function == "read" { //read a variable
+		return t.read(stub, args)
+	}
+	fmt.Println("query did not find func: " + function)
+
+	return nil, errors.New("Received unknown function query: " + function)
+}
+
+//=============================================================================================================================================
+// write - invoke function to write key/value pair
+func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var key, value string
+	var err error
+	fmt.Println("running write()")
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	}
+
+	key = args[0] //rename for funsies
+	value = args[1]
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+
+// Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
+// data to the ledger which can be read later on 
+
+func (t *SimpleChaincode) purchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
+
+	var key, value string
+	var err error
+	fmt.Println("running write()")
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	}
+
+	key = args[0] //rename 
+	value = args[1]
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+
+}
+
+// read - query function to read key/value pair
+func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var key, jsonResp string
+	var err error
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
+	}
+
+	key = args[0]
+	valAsbytes, err := stub.GetState(key)
+	if err != nil {
+		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	return valAsbytes, nil
 }
