@@ -1,3 +1,19 @@
+/*
+Copyright IBM Corp 2016 All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+		 http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package main
 
 import (
@@ -36,9 +52,9 @@ func (t*SimpleChaincode) supplierUpdate () {
 
 // Init resets all the things, i dont think we need to initialize anything
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	}
+	//if len(args) != 1 {
+	//	return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	//}
 
 	err := stub.PutState("hello_world", []byte(args[0]))
 	if err != nil {
@@ -87,9 +103,9 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	var err error
 	fmt.Println("running write()")
 
-	if len(args) != 3 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
-	}
+	//if len(args) != 3 {
+	//	return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	//}
 
 	var key = args[0] //rename for funsies
 	var value = args[1]
@@ -107,9 +123,9 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 	var key, jsonResp string
 	var err error
 
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-	}
+	//if len(args) != 1 {
+	//	return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
+	//}
 
 	key = args[0]
 	valAsbytes, err := stub.GetState(key)
@@ -120,4 +136,3 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 
 	return valAsbytes, nil
 }
-
