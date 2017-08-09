@@ -34,7 +34,7 @@ func main() {
 		"mobile": mobile
 			}`	
 	var d User
-	err := json.Unmarshal([]byte(str),&d)
+	t, err := json.Unmarshal([]byte(str),&d)
 	if err != nil{
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
