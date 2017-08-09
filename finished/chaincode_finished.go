@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-
+	"encoding/json"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
@@ -51,7 +51,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 }
 
 // Invoke is the entry point to invoke a chaincode function
-func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args string) ([]byte, error) {
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
 	// Handle different functions
@@ -84,7 +84,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 //=============================================================================================================================================
 // write - invoke function to write key/value pair
-func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args string) ([]byte, error) {
+func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, value string
 	var err error
 	fmt.Println("running write()")
