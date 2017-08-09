@@ -11,7 +11,7 @@ import (
 type SimpleChaincode struct {
 }
 
-type PersonalInfo struct {
+type User struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
 	DOB       string `json:"DOB"`
@@ -88,11 +88,11 @@ func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args []
 	//var key, value string
 	//var err error
 	//fmt.Println("running write()")
-	user := PersonalInfo{}
+	user := User{}
 	if err != nil{
 		panic(err)
 	}
-
+	err := json.NewDecoder().Decode(&user)
 	userJson, err := json.Marshall(user)
 	if err != nil{
 		panic(err)
