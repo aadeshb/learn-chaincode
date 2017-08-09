@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/nu7hatch/gouuid"
+
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -74,7 +74,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 //=============================================================================================================================================
 // write - invoke function to write key/value pair
-func (t *SimpleChaincode) RegisterSupplies(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, value string
 	var err error
 	fmt.Println("running write()")
@@ -84,10 +84,9 @@ func (t *SimpleChaincode) RegisterSupplies(stub shim.ChaincodeStubInterface, arg
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
 
-	 //rename 
+	key = args[0] //rename 
 	value = args[1]
-	var id, err := uuid.NewV4()
-	err = stub.PutState(id, []byte(value)) //write the variable into the chaincode state
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
