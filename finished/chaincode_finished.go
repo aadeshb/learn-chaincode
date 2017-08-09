@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"github.com/nu7hatch/gouuid"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -49,7 +50,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Init(stub, "init", args)
 	} else if function == "sOne" {
 		return t.sOne(stub, args)
-	} else if function == "makePurchaseOrder" {
+	} else if function == "purchaseOrder" {
 		return t.makePurchaseOrder(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
@@ -73,7 +74,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 //=============================================================================================================================================
 // write - invoke function to write key/value pair
-func (t *SimpleChaincode) sOne(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) RegisterSupplies(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, value string
 	var err error
 	fmt.Println("running write()")
@@ -83,18 +84,14 @@ func (t *SimpleChaincode) sOne(stub shim.ChaincodeStubInterface, args []string) 
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
 
-	key = args[0] //rename 
+	 //rename 
 	value = args[1]
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	var id, err := uuid.NewV4()
+	err = stub.PutState(id, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
 	return nil, nil
-}
-
-
-func printSlice(s []string) {
-	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
 }
 
 
@@ -105,7 +102,6 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 
 	var key, value string
 	var err error
-	fmt.Println("running write()")
 
 	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
@@ -113,11 +109,19 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 
 	key = args[0] //rename 
 	value = args[1]
+	var id, err := uuid.NewV4()
+
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
 	return nil, nil
+
+
+
+
+
+
 
 }
 
