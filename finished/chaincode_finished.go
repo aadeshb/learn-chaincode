@@ -50,7 +50,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "sOne" {
 		return t.sOne(stub, args)
 	} else if function == "purchaseOrder" {
-		return t.purchaseOrder(stub, args)
+		return t.makePurchaseOrder(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
 
