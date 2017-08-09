@@ -100,7 +100,6 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
 	var key, value string
-	var target
 	var err error
 
 	if len(args) != 2 {
