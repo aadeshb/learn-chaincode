@@ -50,7 +50,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Init(stub, "init", args)
 	} else if function == "Register" {
 		return t.Register(stub, args)
-	} else if function == "purchaseOrder" {
+	} else if function == "makepurchaseOrder" {
 		return t.makePurchaseOrder(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
@@ -100,19 +100,22 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
 	var key, value string
+	var target
 	var err error
 
 	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
 
-	key = args[0] //rename 
+	key = args[0] //rename
 	value = args[1]
-	
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
+
+	stub.chaincodeEvent = &pb.ChaincodeEvent{EventName: key, Payload: value}
+
+	//err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	//if err != nil {
+	//	return nil, err
+	//}
 	return nil, nil
 
 
@@ -122,6 +125,7 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 
 
 }
+
 
 // read - query function to read key/value pair
 func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
