@@ -28,16 +28,6 @@ func main() {
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
 
-	itemInfoR := `{"input":{"firstname":"bob","lastname":"axiom","DOB":"dateofbirth","email":"email", "mobile":"mobilephone"}`
-	itemInfoBytes := []byte(itemInfoR)
-	var ItemInfo Input
-	er := json.Unmarshal(itemInfoBytes, &ItemInfo)
-	if er != nil {
-		panic(er)
-	} else {
-		fmt.Println(ItemInfo)
-	}
-	
 }
 
 // Init resets all the things
@@ -60,7 +50,16 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 // Invoke is the entry point to invoke a chaincode function
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
-
+	
+	itemInfoR := `{"input":{"firstname":"bob","lastname":"axiom","DOB":"dateofbirth","email":"email", "mobile":"mobilephone"}`
+	itemInfoBytes := []byte(itemInfoR)
+	var ItemInfo Input
+	er := json.Unmarshal(itemInfoBytes, &ItemInfo)
+	if er != nil {
+		panic(er)
+	} else {
+		fmt.Println(ItemInfo)
+	}
 	// Handle different functions
 	//If the init function is called, then we send the args to the init command to be stored under the "hello_world" key
 	if function == "init" {
