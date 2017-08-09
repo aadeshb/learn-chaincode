@@ -108,8 +108,7 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 
 	key = args[0] //rename 
 	value = args[1]
-	var id, err := uuid.NewV4()
-
+	
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
