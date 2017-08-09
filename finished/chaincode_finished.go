@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"encoding/json"
-	"net/http"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
+
+
 
 type User struct {
 	Firstname string `json:"firstname"`
@@ -21,10 +22,6 @@ type User struct {
 }
 
 
-
-
-
-
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
 // it only reports if an error occurs, which never should
 func main() {
@@ -32,6 +29,28 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
+
+	str := `{
+		"firstname": Joe
+		"lastname": Axiom
+		"DOB": dob
+		"email": email
+		"mobile": mobile
+			}`	
+	var d User
+	marsh := json.Unmarshal([]byte(str),&d)
+	if err != nil{
+		fmt.Printf("Error starting Simple chaincode: %s", err)
+	}
+
+
+
+
+
+
+
+
+
 }
 
 // Init resets all the things
@@ -86,33 +105,13 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 //=============================================================================================================================================
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	//var key, value string
-	//var err error
-	//fmt.Println("running write()")
-	user := User{}
-	if err != nil{
-		panic(err)
-	}
-	err := json.NewDecoder().Decode(&user)
-	userJson, err := json.Marshall(user)
-	if err != nil{
-		panic(err)
-	}
-
-
+	var key, value string
+	var err error
+	fmt.Println("running write()")
 
 	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
-
-	//piBytes, err := stub.GetState("la1")    
-	//var personalInfo PersonalInfo
-	//err = json.Unmarshal(piBytes, &personalInfo)
-	//fmt.Println(personalInfo.Firstname)
-
-
-
-
 
 	key = args[0] //rename for funsies
 	value = args[1]
