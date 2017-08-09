@@ -26,10 +26,6 @@ type User struct {
 // it only reports if an error occurs, which never should
 func main() {
 	err := shim.Start(new(SimpleChaincode))
-	if err != nil {
-		fmt.Printf("Error starting Simple chaincode: %s", err)
-	}
-
 	str := `{
 		"firstname": Joe
 		"lastname": Axiom
@@ -38,7 +34,7 @@ func main() {
 		"mobile": mobile
 			}`	
 	var d User
-	marsh := json.Unmarshal([]byte(str),&d)
+	err := json.Unmarshal([]byte(str),&d)
 	if err != nil{
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
