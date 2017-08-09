@@ -51,13 +51,11 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
-	
-	var stringtwo = args[1]
-	var stringtwobytes = []byte(stringtwo)
-	//itemInfoR := args
-	//itemInfoBytes := []byte(args)
+	itemInfoR := `{"input":{"firstname":"bob","lastname":"axiom","DOB":"dateofbirth","email":"email", "mobile":"mobilephone"}`
+	args[1] = itemInfoR
+	itemInfoBytes := []byte(itemInfoR)
 	var ItemInfo Input
-	er := json.Unmarshal(stringtwobytes, &ItemInfo)
+	er := json.Unmarshal(itemInfoBytes, &ItemInfo)
 	if er != nil {
 		panic(er)
 	} else {
