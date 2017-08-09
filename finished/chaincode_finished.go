@@ -11,6 +11,13 @@ import (
 type SimpleChaincode struct {
 }
 
+type PersonalInfo struct {
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	DOB       string `json:"DOB"`
+	Email     string `json:"email"`
+	Mobile    string `json:"mobile"`
+}
 
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
 // it only reports if an error occurs, which never should
