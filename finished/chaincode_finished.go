@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
@@ -20,7 +19,7 @@ func main() {
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
 
-	
+
 }
 
 // Init resets all the things
@@ -48,8 +47,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	//If the init function is called, then we send the args to the init command to be stored under the "hello_world" key
 	if function == "init" {
 		return t.Init(stub, "init", args)
-	} else if function == "supplierInfo" {
-		return t.supplierInfo(stub, args)
+	} else if function == "sOne" {
+		return t.sOne(stub, args)
 	} else if function == "purchaseOrder" {
 		return t.purchaseOrder(stub, args)
 	}
@@ -74,16 +73,17 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 //=============================================================================================================================================
 // write - invoke function to write key/value pair
-func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) sOne(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, value string
 	var err error
 	fmt.Println("running write()")
+
 
 	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
 
-	key = args[0] //rename for funsies
+	key = args[0] //rename 
 	value = args[1]
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
@@ -93,10 +93,15 @@ func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args []
 }
 
 
+func printSlice(s []string) {
+	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
+}
+
+
 // Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
 // data to the ledger which can be read later on 
 
-func (t *SimpleChaincode) purchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
+func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
 	var key, value string
 	var err error
