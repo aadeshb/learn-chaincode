@@ -19,6 +19,11 @@ type PersonalInfo struct {
 	Mobile    string `json:"mobile"`
 }
 
+
+
+
+
+
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
 // it only reports if an error occurs, which never should
 func main() {
@@ -87,6 +92,11 @@ func (t *SimpleChaincode) supplierInfo(stub shim.ChaincodeStubInterface, args []
 	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
+	
+	piBytes, err := stub.GetState("la1")    
+	var personalInfo PersonalInfo
+	err = json.Unmarshal(piBytes, &personalInfo)
+	fmt.Println(personalInfo.Firstname)
 
 	key = args[0] //rename for funsies
 	value = args[1]
