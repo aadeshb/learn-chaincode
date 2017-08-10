@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"time"
 
 )
 
@@ -100,30 +101,21 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
 	var key, value string
-	var err error
-
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
-	}
+	var ts = time.Now().Unix()
 
 	key = args[0] //rename
-	value = args[1]
-
-	stub.chaincodeEvent = &pb.ChaincodeEvent{EventName: key, Payload: value}
-
-	//err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
-	//if err != nil {
-	//	return nil, err
-	//}
+	ts = args[1]
+	var manid = args[2]
+	value = args[0:2] 
+// get timestamp and get supplier id
+// man and supplier create their own ids	
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
+	}
 
-
-
-
-
-
-
-}
 
 
 // read - query function to read key/value pair
@@ -144,3 +136,4 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 
 	return valAsbytes, nil
 }
+
