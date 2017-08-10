@@ -104,10 +104,8 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	var err error
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
-	//b = args[1]
 	key = args[0] //the key is simply the suppliers id
-	//var manid = args[2]
-	value = args[1] + b + key
+	value = args[1] + b 
 
 // get timestamp and get supplier id
 // man and supplier create their own ids	
