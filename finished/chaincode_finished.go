@@ -108,7 +108,8 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
 	key = args[0] //the key is simply the suppliers id
-	value = args[1] + b + key
+	var body = args[2]
+	value = args[1] + b + key + " " + body
 	//var comm string = value + b + key
 	
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
