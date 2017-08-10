@@ -97,17 +97,17 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 
 // Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
 // data to the ledger which can be read later on 
-
+// makePurchaseOrder has two user given inputs, 1 - supplier id, 2- manufacturer id
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
 	var key, value string
 	var err error
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
-	b = args[1]
+	//b = args[1]
 	key = args[0] //the key is simply the suppliers id
-	var manid = args[2]
-	value = key + b + manid
+	//var manid = args[2]
+	value = args[1] + b + key
 
 // get timestamp and get supplier id
 // man and supplier create their own ids	
