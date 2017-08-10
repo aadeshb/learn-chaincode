@@ -115,7 +115,7 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return []byte(comm), nil
 }
 
 // read - query function to read key/value pair
