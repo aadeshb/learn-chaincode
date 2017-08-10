@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"time"
+	//"time"
 	//"strconv"
 )
 
@@ -102,10 +102,10 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 
 	var key, value string
 	var err error
-	var a = time.Now()
-	var b = a.Format("20060102150405") 
+	//var a = time.Now()
+	//var b = a.Format("20060102150405") 
 	key = args[0] //the key is simply the suppliers id
-	value = args[1] + b 
+	value = args[1] + key
 
 // get timestamp and get supplier id
 // man and supplier create their own ids	
