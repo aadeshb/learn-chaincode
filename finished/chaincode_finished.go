@@ -102,9 +102,7 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 
 	var key, value string
 	var err error
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
-	}
+	
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
 	key = args[0] //the key is simply the suppliers id
