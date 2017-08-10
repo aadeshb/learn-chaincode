@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"time"
-
+	"strconv"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -101,12 +101,13 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
 	var key, value string
-	var ts = time.Now().Unix()
-
+	var t
+	t := time.Now()
+	t.Format("2006-01-02 15:04:05")
 	key = args[0] //rename
-	ts = args[1]
+	t = args[1]
 	var manid = args[2]
-	value = args[0:2] 
+	value = args[] 
 // get timestamp and get supplier id
 // man and supplier create their own ids	
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
