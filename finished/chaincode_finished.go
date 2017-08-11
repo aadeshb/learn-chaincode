@@ -105,10 +105,9 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
-	var supplierid = args[0] //the key is simply the suppliers id
+	key = args[0] //the key is simply the suppliers id
 	var body = args[2]
-	key = args[1] + "-" + b +"-"+  supplierid 
-	value = "Recieved purchase order from" + key + "-"+ body
+	value = args[1] + "-" + b +"-"+  key + " " + body
 	//var comm string = value + b + key
 	
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
@@ -117,10 +116,6 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	}
 	return nil, nil
 }
-
-
-
-
 
 
 // read - query function to read key/value pair
