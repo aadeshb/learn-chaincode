@@ -53,6 +53,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Register(stub, args)
 	} else if function == "makePurchaseOrder" {
 		return t.makePurchaseOrder(stub, args)
+	} else if function == "viewPurchaseOrder" {
+		return t.viewPurchaseOrder(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
 
@@ -105,9 +107,10 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
-	key = args[0] //the key is simply the suppliers id
+	supplierid = args[0] //the key is simply the suppliers id
 	var body = args[2]
-	value = args[1] + "-" + b +"-"+  key + " " + body
+	key = args[1] + "-" + b +"-"+  supplierid 
+	value = body
 	//var comm string = value + b + key
 	
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
@@ -116,6 +119,11 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	}
 	return nil, nil
 }
+
+
+
+
+
 
 // read - query function to read key/value pair
 func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -135,4 +143,5 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 
 	return valAsbytes, nil
 }
+
 
