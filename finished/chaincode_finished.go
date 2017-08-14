@@ -16,11 +16,7 @@ type SimpleChaincode struct {
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
 // it only reports if an error occurs, which never should
 func main() {
-	err := shim.Start(new(SimpleChaincode))
-	if err != nil {
-		fmt.Printf("Error starting Simple chaincode: %s", err)
-	}
-
+	
 
 }
 
@@ -136,5 +132,4 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 
 	return valAsbytes, nil
 }
-
 
