@@ -45,7 +45,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	v5User.Firstname = args[0]
     v5User.Lastname = args[1]
 	////if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+		//return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	//}
 
 	bytes, err := json.Marshal(v5User)
