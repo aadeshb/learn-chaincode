@@ -19,10 +19,10 @@ type user struct {
 	//ObjectType string `json:"docType"`
 	Firstname  string `json:"firstname"`
 	Lastname   string `json:"lastname"`
-	//DOB        string `json:"dob"`
-	//Email      string `json:"email"`
-	//Mobile     string `json:"mobile"`
-	//Class	   string `json:"class"`
+	DOB        string `json:"dob"`
+	Email      string `json:"email"`
+	Mobile     string `json:"mobile"`
+	Class	   string `json:"class"`
 }
 
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
@@ -41,26 +41,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//If we are given more than one argument for the init function, then it errors
 	//Init shouldn't need any arguments at all actually
 
-	var v5User user
-	v5User.Firstname = args[0]
-    v5User.Lastname = args[1]
-	////if len(args) != 1 {
-		//return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	//}
+	err := stub.PutState("hello_world", []byte(args[0]))
+	if err != nil {
+		return nil, err
+	}
 
-	bytes, err := json.Marshal(v5User)
-    
-    if err != nil { return nil, errors.New("Error creating v5User record") }
-
-	err = stub.PutState("v5User", bytes)
-
-	//We are writing some key under the name "hello_world" to the ledger, the hello world is simply a key to hold whatever
-	//argument we pass, if we query "hello_world" with the query function, then it would return whatever argument is placed in args[0]
-	//err := stub.PutState("hello_world", []byte(args[0]))
-	//if err != nil {
-	//	return nil, err
-	//}
-
+	
 	return nil, nil
 }
 
@@ -124,24 +110,26 @@ func (t *SimpleChaincode) retrieve(stub shim.ChaincodeStubInterface, args []stri
 
 
 
+//============================================================================================================================================
 
-
-
+//															REGISTRATION CODE
 
 //=============================================================================================================================================
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, value string
-	var err error
-	fmt.Println("running write()")
+	var v5User user
+	v5User.Firstname = args[0]
+    v5User.Lastname = args[1]
+	v5User.DOB = args[2]
+	v5User.Email = args[3]
+	v5User.Mobile = args[4]
+	v5User.Class = args[5]
 
+	bytes, err := json.Marshal(v5User)
+    
+    if err != nil { return nil, errors.New("Error creating v5User record") }
 
-	key = args[0] //rename 
-	value = args[1]
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
+	err = stub.PutState("v5User", bytes)
 	return nil, nil
 }
 
