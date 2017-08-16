@@ -14,6 +14,7 @@ import (
 type SimpleChaincode struct {
 }
 
+var materialIndexStr = "_materialindex"	
 
 type user struct {
 	//ObjectType string `json:"docType"`
@@ -68,7 +69,14 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 
-	
+
+	var empty []string
+	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
+	err = stub.PutState(materialIndexStr, jsonAsBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
@@ -158,13 +166,28 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
     if err != nil { return nil, errors.New("Error creating raw material") }
 
 	err = stub.PutState(prodid, bytes)
+
+
+    materialsAsBytes, err := stub.GetState(materialIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get material index")
+	}
+	var materialIndex []string
+	json.Unmarshal(materialsAsBytes, &materialIndex)							//un stringify it aka JSON.parse()
+	
+	//append
+	materialIndex = append(materialIndex, prodid)								//add productid to index list
+	fmt.Println("! material index: ", materialIndex)
+	jsonAsBytes, _ := json.Marshal(materialIndex)
+	err = stub.PutState(materialIndexStr, jsonAsBytes)							//store name of material
+
 	return nil, nil
 }
 
 
 //=====================================================================================================================================
 
-//																PURCHASE ORDER
+//																PURCHASE ORDERS
 
 //=====================================================================================================================================
 
@@ -217,6 +240,41 @@ func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, a
 	}
 	return nil, nil
 }
+
+
+
+// ================================================================================================================================================
+
+// 																	SENDING GOODS/TRANSFERING ASSETS
+
+// ================================================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 func (t *SimpleChaincode) awardCertificate(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
