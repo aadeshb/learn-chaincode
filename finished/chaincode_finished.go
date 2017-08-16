@@ -16,13 +16,13 @@ type SimpleChaincode struct {
 
 
 type user struct {
-	ObjectType string `json:"docType"`
+	//ObjectType string `json:"docType"`
 	Firstname  string `json:"firstname"`
 	Lastname   string `json:"lastname"`
-	DOB        string `json:"dob"`
-	Email      string `json:"email"`
-	Mobile     string `json:"mobile"`
-	Class	   string `json:"class"`
+	//DOB        string `json:"dob"`
+	//Email      string `json:"email"`
+	//Mobile     string `json:"mobile"`
+	//Class	   string `json:"class"`
 }
 
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
@@ -42,7 +42,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//Init shouldn't need any arguments at all actually
 
 	var v5User user
-
+	v5User.Firstname = args[0]
+    v5User.Lastname = args[1]
 	////if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	//}
