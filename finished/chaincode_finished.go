@@ -78,7 +78,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	return nil, nil
-}
+	}
 
 
 
@@ -167,7 +167,7 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 
 	err = stub.PutState(prodid, bytes)
 
-
+	/*
     materialsAsBytes, err := stub.GetState(materialIndexStr)
 	if err != nil {
 		return nil, errors.New("Failed to get material index")
@@ -179,7 +179,8 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 	materialIndex = append(materialIndex, prodid)								//add productid to index list
 	fmt.Println("! material index: ", materialIndex)
 	jsonAsBytes, _ := json.Marshal(materialIndex)
-	err = stub.PutState(materialIndexStr, jsonAsBytes)							//store name of material
+	err = stub.PutState(materialIndexStr, jsonAsBytes)		
+	*/					//store name of material
 
 	return nil, nil
 }
