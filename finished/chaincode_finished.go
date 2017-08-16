@@ -25,6 +25,18 @@ type user struct {
 	Class	   string `json:"class"`
 }
 
+type RawMaterial struct {
+	//ObjectType string `json:"docType"`
+	Creator  		string `json:"creator"`
+	Current_Owner   string `json:"currentowner"`
+	ClaimTags       string `json:"claimtags"`
+	Location      	string `json:"location"`
+	Date     		string `json:"date"`
+	CertID	   		string `json:"certid"`
+	Referencer		string `json:"referencer"`
+}
+
+
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
 // it only reports if an error occurs, which never should
 func main() {
@@ -131,6 +143,33 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
     if err != nil { return nil, errors.New("Error creating v5User record") }
 
 	err = stub.PutState(username, bytes)
+	return nil, nil
+}
+
+
+
+func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var r RawMaterial
+	var username = args[0]
+
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
+
+	var userkeycombo = username + "-" + b
+
+	r.Creator = args[1]
+    r.Current_Owner = args[2]
+	r.ClaimTags = args[3]
+	r.Location = args[4]
+	r.Date = args[5]
+	r.CertID = args[6]
+	r.Referencer = userkeycombo
+
+	bytes, err := json.Marshal(r)
+    
+    if err != nil { return nil, errors.New("Error creating raw material") }
+
+	err = stub.PutState(userkeycombo, bytes)
 	return nil, nil
 }
 
