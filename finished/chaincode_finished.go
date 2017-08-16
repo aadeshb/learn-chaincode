@@ -74,6 +74,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Init(stub, "init", args)
 	} else if function == "Register" {
 		return t.Register(stub, args)
+	} else if function == "RegisterRM" {
+		return t.RegisterRM(stub, args)
 	} else if function == "makePurchaseOrder" {
 		return t.makePurchaseOrder(stub, args)
 	} else if function == "replyPurchaseOrder" {
