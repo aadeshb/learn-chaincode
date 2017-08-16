@@ -118,18 +118,19 @@ func (t *SimpleChaincode) retrieve(stub shim.ChaincodeStubInterface, args []stri
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var v5User user
-	v5User.Firstname = args[0]
-    v5User.Lastname = args[1]
-	v5User.DOB = args[2]
-	v5User.Email = args[3]
-	v5User.Mobile = args[4]
-	v5User.Class = args[5]
+	var username = args[0]
+	v5User.Firstname = args[1]
+    v5User.Lastname = args[2]
+	v5User.DOB = args[3]
+	v5User.Email = args[4]
+	v5User.Mobile = args[5]
+	v5User.Class = args[6]
 
 	bytes, err := json.Marshal(v5User)
     
     if err != nil { return nil, errors.New("Error creating v5User record") }
 
-	err = stub.PutState("v5User", bytes)
+	err = stub.PutState(username, bytes)
 	return nil, nil
 }
 
