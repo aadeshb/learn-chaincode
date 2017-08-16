@@ -33,7 +33,7 @@ type RawMaterial struct {
 	Location      	string `json:"location"`
 	Date     		string `json:"date"`
 	CertID	   		string `json:"certid"`
-//	Referencer		string `json:"referencer"`
+	Referencer		string `json:"referencer"`
 }
 
 
@@ -89,7 +89,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "makePurchaseOrder" {
 		return t.makePurchaseOrder(stub, args)
 	} else if function == "replyPurchaseOrder" {
-		return t.makePurchaseOrder(stub, args)
+		return t.replyPurchaseOrder(stub, args)
 	} 
 	fmt.Println("invoke did not find func: " + function)
 
@@ -142,10 +142,8 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 	var r RawMaterial
 	var prodid = args[0]
 
-	//var a = time.Now()
-	//var b = a.Format("20060102150405") 
-
-	//var userkeycombo = username + "-" + b
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
 
 	r.Creator = args[1]
     r.Current_Owner = args[2]
@@ -153,7 +151,7 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 	r.Location = args[4]
 	r.Date = args[5]
 	r.CertID = args[6]
-	//r.Referencer = userkeycombo
+	r.Referencer = prodid + "-" + b
 
 	bytes, err := json.Marshal(r)
     
