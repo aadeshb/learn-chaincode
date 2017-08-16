@@ -33,7 +33,7 @@ type RawMaterial struct {
 	Location      	string `json:"location"`
 	Date     		string `json:"date"`
 	CertID	   		string `json:"certid"`
-	Referencer		string `json:"referencer"`
+//	Referencer		string `json:"referencer"`
 }
 
 
@@ -152,12 +152,12 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 
 func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var r RawMaterial
-	var username = args[0]
+	var matname = args[0]
 
-	var a = time.Now()
-	var b = a.Format("20060102150405") 
+	//var a = time.Now()
+	//var b = a.Format("20060102150405") 
 
-	var userkeycombo = username + "-" + b
+	//var userkeycombo = username + "-" + b
 
 	r.Creator = args[1]
     r.Current_Owner = args[2]
@@ -165,15 +165,26 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 	r.Location = args[4]
 	r.Date = args[5]
 	r.CertID = args[6]
-	r.Referencer = userkeycombo
+	//r.Referencer = userkeycombo
 
 	bytes, err := json.Marshal(r)
     
     if err != nil { return nil, errors.New("Error creating raw material") }
 
-	err = stub.PutState(userkeycombo, bytes)
+	err = stub.PutState(matname, bytes)
 	return nil, nil
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
 // data to the ledger which can be read later on 
