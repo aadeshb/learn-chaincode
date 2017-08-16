@@ -37,6 +37,16 @@ type RawMaterial struct {
 }
 
 
+type PurchaseOrder struct{
+
+	Customer  		string `json:"customer"`
+	Vendor   		string `json:"vendor"`
+	ProductID   	string `json:"productid"`
+	Price       	string `json:"price"`
+	Date        	string `json:"date"`
+	TransactionID	string `json:"transactionid"`
+}
+
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
 // it only reports if an error occurs, which never should
 func main() {
@@ -89,37 +99,15 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 // Query is our entry point for queries
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("query is running " + function)
-    //var u user
-
-	// Handle different functions
-	// If the read function is called the read function activiates
-	if function == "read" { //read a variable
-
+    
+	if function == "read" { 
 		return t.read(stub, args)
-	} //else if function == "retrieve" {
-		//return t.retrieve(stub, args)
-	//}
+	} 
+
+
+
 	fmt.Println("query did not find func: " + function)
-
 	return nil, errors.New("Received unknown function query: " + function)
-}
-
-
-func (t *SimpleChaincode) retrieve(stub shim.ChaincodeStubInterface, args []string) (user, error) {
-	
-	var v user
-
-	bytes, err := stub.GetState(args[0]);
-
-	//if err != nil {	fmt.Printf("RETRIEVE_V5C: Failed to invoke vehicle_code: %s", err); return v, errors.New("RETRIEVE_V5C: Error retrieving vehicle with v5cID = " + args) }
-
-	err = json.Unmarshal(bytes, &v);
-
-    if err != nil {	fmt.Printf("RETRIEVE_V5C: Corrupt vehicle record "+string(bytes)+": %s", err); return v, errors.New("RETRIEVE_V5C: Corrupt vehicle record"+string(bytes))	}
-
-	return v, nil
-
-
 }
 
 
@@ -152,7 +140,7 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 
 func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var r RawMaterial
-	var matname = args[0]
+	var prodid = args[0]
 
 	//var a = time.Now()
 	//var b = a.Format("20060102150405") 
@@ -171,40 +159,43 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
     
     if err != nil { return nil, errors.New("Error creating raw material") }
 
-	err = stub.PutState(matname, bytes)
+	err = stub.PutState(prodid, bytes)
 	return nil, nil
 }
 
 
+//=====================================================================================================================================
 
+//																PURCHASE ORDER
 
-
-
-
-
-
-
-
+//=====================================================================================================================================
 
 // Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
 // data to the ledger which can be read later on 
 // makePurchaseOrder has two user given inputs, 1 - supplier id, 2- manufacturer id
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
-	var key, value string
-	var err error
-	
+	var p PurchaseOrder
+	var transid = args[0]
+
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
-	key = args[0] //the key is simply the suppliers id
-	var body = args[2]
-	value = args[1] + "-" + b +"-"+  key + " " + body
-	//var comm string = value + b + key
-	
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
+
+	//var userkeycombo = username + "-" + b
+
+	p.Customer = args[1]
+    p.Vendor = args[2]
+	p.ProductID = args[3]
+	p.Price = args[4]
+	p.Date = args[5]
+	p.TransactionID = transid + "-" + b
+	//r.Referencer = userkeycombo
+
+	bytes, err := json.Marshal(p)
+    
+    if err != nil { return nil, errors.New("Error creating raw material") }
+
+	err = stub.PutState(transid, bytes)
 	return nil, nil
 }
 
