@@ -14,22 +14,25 @@ import (
 type SimpleChaincode struct {
 }
 
-var materialIndexStr = "_materialindex"	
+//var materialIndexStr = "_materialindex"	
 
 type user struct {
 	//ObjectType string `json:"docType"`
 	Firstname  string `json:"firstname"`
 	Lastname   string `json:"lastname"`
+	userID	   string `json:"userid"`
 	DOB        string `json:"dob"`
 	Email      string `json:"email"`
 	Mobile     string `json:"mobile"`
 	Class	   string `json:"class"`
 }
-
-type RawMaterial struct {
+// transfer function will append new owner and move current owner to previous owner, 
+type Material struct {
 	//ObjectType string `json:"docType"`
 	Creator  		string `json:"creator"`
 	Current_Owner   string `json:"currentowner"`
+	Previous_Onwer  string `json:"previousowner"`
+	State 			string `json:"state"`
 	ClaimTags       string `json:"claimtags"`
 	Location      	string `json:"location"`
 	Date     		string `json:"date"`
@@ -45,7 +48,7 @@ type PurchaseOrder struct{
 	ProductID   	string `json:"productid"`
 	Price       	string `json:"price"`
 	Date        	string `json:"date"`
-	TransactionID	string `json:"transactionid"`
+	PurchaseOrderID	string `json:"purchaseorderid"`
 }
 
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
@@ -69,14 +72,14 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 
-
+/*
 	var empty []string
 	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
 	err = stub.PutState(materialIndexStr, jsonAsBytes)
 	if err != nil {
 		return nil, err
 	}
-
+*/
 	return nil, nil
 	}
 
@@ -131,10 +134,11 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	var username = args[0]
 	v5User.Firstname = args[1]
     v5User.Lastname = args[2]
-	v5User.DOB = args[3]
-	v5User.Email = args[4]
-	v5User.Mobile = args[5]
-	v5User.Class = args[6]
+    v5User.userID = args[3]
+	v5User.DOB = args[4]
+	v5User.Email = args[5]
+	v5User.Mobile = args[6]
+	v5User.Class = args[7]
 
 	bytes, err := json.Marshal(v5User)
     
@@ -198,7 +202,7 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
 
 	var p PurchaseOrder
-	var transid = args[0]
+	var poid = args[0]
 
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
@@ -210,14 +214,14 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	p.ProductID = args[3]
 	p.Price = args[4]
 	p.Date = args[5]
-	p.TransactionID = transid + "-" + b
+	p.PurchaseOrderID = poid + "-" + b
 	//r.Referencer = userkeycombo
 
 	bytes, err := json.Marshal(p)
     
     if err != nil { return nil, errors.New("Error creating raw material") }
 
-	err = stub.PutState(transid, bytes)
+	err = stub.PutState(poid, bytes)
 	return nil, nil
 }
 
