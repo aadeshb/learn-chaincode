@@ -10,11 +10,17 @@ import (
 	//"strconv"
 )
 
+//==============================================================================================================================================================
+
+//																			Structs
+
+//=============================================================================================================================================================
+
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
 
-//var materialIndexStr = "_materialindex"	
+
 
 type user struct {
 	//ObjectType string `json:"docType"`
@@ -32,7 +38,7 @@ type RawMaterial struct {
 	Creator  		string `json:"creator"`
 	Current_Owner   string `json:"currentowner"`
 	//Previous_Onwer  string `json:"previousowner"`
-	State 			string `json:"state"`
+	//State 			string `json:"state"`
 	ClaimTags       string `json:"claimtags"`
 	Location      	string `json:"location"`
 	Date     		string `json:"date"`
@@ -50,6 +56,16 @@ type PurchaseOrder struct{
 	Date        	string `json:"date"`
 	PurchaseOrderID	string `json:"purchaseorderid"`
 }
+
+
+//================================================================================================================================================================
+
+//																	Main, Init, Invoke, Query
+
+//================================================================================================================================================================
+
+
+
 
 // The main function is used to bootstrap the code, however we don't have any functionality for it right now
 // it only reports if an error occurs, which never should
@@ -72,14 +88,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 
-/*
-	var empty []string
-	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
-	err = stub.PutState(materialIndexStr, jsonAsBytes)
-	if err != nil {
-		return nil, err
-	}
-*/
 	return nil, nil
 	}
 
@@ -101,7 +109,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.makePurchaseOrder(stub, args)
 	} else if function == "replyPurchaseOrder" {
 		return t.replyPurchaseOrder(stub, args)
-	} 
+	} else if function == "TransferAsset" {
+		return t.TransferAsset(stub, args)
+	}
 	fmt.Println("invoke did not find func: " + function)
 
 	return nil, errors.New("Received unknown function invocation: " + function)
@@ -123,11 +133,11 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 
 
-//============================================================================================================================================
+//===============================================================================================================================================================
 
 //															REGISTRATION CODE
 
-//=============================================================================================================================================
+//===============================================================================================================================================================
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var v5User user
@@ -170,30 +180,16 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 
 	err = stub.PutState(prodid, bytes)
 
-	/*
-    materialsAsBytes, err := stub.GetState(materialIndexStr)
-	if err != nil {
-		return nil, errors.New("Failed to get material index")
-	}
-	var materialIndex []string
-	json.Unmarshal(materialsAsBytes, &materialIndex)							//un stringify it aka JSON.parse()
-	
-	//append
-	materialIndex = append(materialIndex, prodid)								//add productid to index list
-	fmt.Println("! material index: ", materialIndex)
-	jsonAsBytes, _ := json.Marshal(materialIndex)
-	err = stub.PutState(materialIndexStr, jsonAsBytes)		
-	*/					//store name of material
 
 	return nil, nil
 }
 
 
-//=====================================================================================================================================
+//====================================================================================================================================================================
 
 //																PURCHASE ORDERS
 
-//=====================================================================================================================================
+//====================================================================================================================================================================
 
 // Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
 // data to the ledger which can be read later on 
@@ -233,11 +229,22 @@ func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, a
 	
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
-	key = args[0] //the key is simply the suppliers id
-	var body = args[2]
+	key = args[0] 
+	var body = args[2] //this will be the yes or no
 	value = args[1] + "-" + b +"-"+  key + " " + body
-	//var comm string = value + b + key
-	
+
+
+
+	//here will be the automatic transfer functions calling
+
+
+
+
+
+
+
+
+
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
@@ -247,38 +254,45 @@ func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, a
 
 
 
-// ================================================================================================================================================
+// ==================================================================================================================================================================
 
 // 																	SENDING GOODS/TRANSFERING ASSETS
 
-// ================================================================================================================================================
+// ==================================================================================================================================================================
 
 
+func (t *SimpleChaincode) TransferAsset(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	
+	//      0       		 1
+	// "ProductID", "new owner name"
+	
+	
+	RMAsBytes, err := stub.GetState(args[0])
+	if err != nil {
+		return nil, errors.New("Failed to get thing")
+	}
+
+	res := RawMaterial{}
+	json.Unmarshal(RMAsBytes, &res)										//un stringify it aka JSON.parse()
+	res.Current_Owner = args[1]														//change the user
+	
+	jsonAsBytes, _ := json.Marshal(res)
+	err = stub.PutState(args[0], jsonAsBytes)								//rewrite the marble with id as key
+	if err != nil {
+		return nil, err
+	}
+	
+	fmt.Println("- end set user")
+	return nil, nil
+}
 
 
+//========================================================================================================================================================================
 
+//															Certificate Stuff
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//========================================================================================================================================================================
 
 
 func (t *SimpleChaincode) awardCertificate(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
@@ -303,7 +317,11 @@ func (t *SimpleChaincode) awardCertificate(stub shim.ChaincodeStubInterface, arg
 
 
 
+//===========================================================================================================================================================================
 
+//																			Read
+
+//===========================================================================================================================================================================
 
 
 
