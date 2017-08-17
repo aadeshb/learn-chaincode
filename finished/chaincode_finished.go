@@ -31,7 +31,7 @@ type RawMaterial struct {
 	//ObjectType string `json:"docType"`
 	Creator  		string `json:"creator"`
 	Current_Owner   string `json:"currentowner"`
-	Previous_Onwer  string `json:"previousowner"`
+	//Previous_Onwer  string `json:"previousowner"`
 	State 			string `json:"state"`
 	ClaimTags       string `json:"claimtags"`
 	Location      	string `json:"location"`
@@ -134,11 +134,10 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	var username = args[0]
 	v5User.Firstname = args[1]
     v5User.Lastname = args[2]
-    v5User.userID = args[3]
-	v5User.DOB = args[4]
-	v5User.Email = args[5]
-	v5User.Mobile = args[6]
-	v5User.Class = args[7]
+	v5User.DOB = args[3]
+	v5User.Email = args[4]
+	v5User.Mobile = args[5]
+	v5User.Class = args[6]
 
 	bytes, err := json.Marshal(v5User)
     
