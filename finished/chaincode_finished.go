@@ -27,7 +27,7 @@ type user struct {
 	Class	   string `json:"class"`
 }
 // transfer function will append new owner and move current owner to previous owner, 
-type Material struct {
+type RawMaterial struct {
 	//ObjectType string `json:"docType"`
 	Creator  		string `json:"creator"`
 	Current_Owner   string `json:"currentowner"`
