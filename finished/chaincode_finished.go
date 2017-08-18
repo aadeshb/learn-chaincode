@@ -6,7 +6,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"time"
 	"encoding/json"
-
+	//iot "github.com/ibm-watson-iot/blockchain-samples/contracts/platform/iotcontractplatform"
 	//"strconv"
 )
 
@@ -35,10 +35,10 @@ type user struct {
 // transfer function will append new owner and move current owner to previous owner, 
 type RawMaterial struct {
 	//ObjectType string `json:"docType"`
+	Name 			string `json:"name"`
 	Creator  		string `json:"creator"`
 	Current_Owner   string `json:"currentowner"`
-	//Previous_Onwer  string `json:"previousowner"`
-	//State 			string `json:"state"`
+	//Previous_Owner  string `json:"previousowner"`
 	ClaimTags       string `json:"claimtags"`
 	Location      	string `json:"location"`
 	Date     		string `json:"date"`
@@ -46,6 +46,21 @@ type RawMaterial struct {
 	Referencer		string `json:"referencer"`
 }
 
+
+type FinishedGood struct {
+	//ObjectType string `json:"docType"`
+	Name 			string `json:"name"`
+	Creator  		string `json:"creator"`
+	Current_Owner   string `json:"currentowner"`
+	Ingredients 	string `json:"ingredients"`
+	//Previous_Owner  string `json:"previousowner"`
+	Certificates	string `json:"certificates"`
+	ClaimTags       string `json:"claimtags"`
+	Location      	string `json:"location"`
+	Date     		string `json:"date"`
+	CertID	   		string `json:"certid"`
+	Referencer		string `json:"referencer"`
+}
 
 type PurchaseOrder struct{
 
@@ -105,13 +120,15 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Register(stub, args)
 	} else if function == "RegisterRM" {
 		return t.RegisterRM(stub, args)
+	} else if function == "RegisterFP" {
+		return t.RegisterFP(stub, args)
 	} else if function == "makePurchaseOrder" {
 		return t.makePurchaseOrder(stub, args)
 	} else if function == "replyPurchaseOrder" {
 		return t.replyPurchaseOrder(stub, args)
 	} else if function == "TransferAsset" {
 		return t.TransferAsset(stub, args)
-	}
+	} 
 	fmt.Println("invoke did not find func: " + function)
 
 	return nil, errors.New("Received unknown function invocation: " + function)
@@ -124,6 +141,9 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	if function == "read" { 
 		return t.read(stub, args)
 	} 
+	if function == "richsearch"{
+		return t.richsearch(stub,args)
+	}
 
 
 
@@ -135,7 +155,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 //===============================================================================================================================================================
 
-//															REGISTRATION CODE
+//																			REGISTRATION CODE
 
 //===============================================================================================================================================================
 // write - invoke function to write key/value pair
@@ -185,9 +205,40 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 }
 
 
+
+func (t *SimpleChaincode) RegisterFP(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var f FinishedGood
+	var prodid = args[0]
+
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
+
+	f.Name = args[1]
+	f.Creator = args[2]
+    f.Current_Owner = args[3]
+    f.Ingredients = args[4]	//Ingredients will hold pointers to all the ingredients, all of their product IDs will be held here
+	f.ClaimTags = args[5]
+	f.Location = args[6]
+	f.Date = args[7]
+	f.CertID = args[8]
+	f.Referencer = prodid + "-" + b
+
+	bytes, err := json.Marshal(f)
+    
+    if err != nil { return nil, errors.New("Error creating raw material") }
+
+	err = stub.PutState(prodid, bytes)
+
+
+	return nil, nil
+}
+
+
+
+
 //====================================================================================================================================================================
 
-//																PURCHASE ORDERS
+//																			PURCHASE ORDERS
 
 //====================================================================================================================================================================
 
@@ -290,7 +341,7 @@ func (t *SimpleChaincode) TransferAsset(stub shim.ChaincodeStubInterface, args [
 
 //========================================================================================================================================================================
 
-//															Certificate Stuff
+//																				Certificate Stuff
 
 //========================================================================================================================================================================
 
@@ -319,7 +370,7 @@ func (t *SimpleChaincode) awardCertificate(stub shim.ChaincodeStubInterface, arg
 
 //===========================================================================================================================================================================
 
-//																			Read
+//																			   Read
 
 //===========================================================================================================================================================================
 
@@ -347,7 +398,7 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 
 
 
-func (t *SimpleChaincode) viewPurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) richsearch(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, jsonResp string
 	var err error
 
@@ -364,5 +415,4 @@ func (t *SimpleChaincode) viewPurchaseOrder(stub shim.ChaincodeStubInterface, ar
 
 	return valAsbytes, nil
 }
-
 
