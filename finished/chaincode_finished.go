@@ -185,13 +185,13 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
-
-	r.Creator = args[1]
-    r.Current_Owner = args[2]
-	r.ClaimTags = args[3]
-	r.Location = args[4]
-	r.Date = args[5]
-	r.CertID = args[6]
+	r.Name = args[1]
+	r.Creator = args[2]
+    r.Current_Owner = args[3]
+	r.ClaimTags = args[4]
+	r.Location = args[5]
+	r.Date = args[6]
+	r.CertID = args[7]
 	r.Referencer = prodid + "-" + b
 
 	bytes, err := json.Marshal(r)
