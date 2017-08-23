@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
+	//"strconv"
+	//"strings"
+	//"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -105,7 +105,7 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 
 	// ==== Create user object and marshal to JSON ====
 	objectType := "user"
-	user := &user{fname, lname, uid, userdob, useremail, usermobile, userclass}
+	user := &user{fname, lname, uid, userdob, useremail, usermobile, userclass, objectType}
 	userJSONasBytes, err := json.Marshal(user)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -126,7 +126,7 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	//  In our case, the composite key is based on indexName~color~name.
 	//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
 	indexName := "uid~fname"
-	uidIndexKey, err := stub.CreateCompositeKey(indexName, []string{user.userID, user.fname})
+	uidIndexKey, err := stub.CreateCompositeKey(indexName, []string{user.userID, user.Firstname})
 	if err != nil {
 		return shim.Error(err.Error())
 	}
