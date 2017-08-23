@@ -57,7 +57,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	// Handle different functions
 	if function == "Register" { //create a new marble
 		return t.Register(stub, args)
-	} 
+	} else if function == "queryUsers" { 
+		return t.queryUsers(stub, args) 
+	}
 	fmt.Println("invoke did not find func: " + function) //error
 	return shim.Error("Received unknown function invocation")
 }
@@ -138,4 +140,21 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	// ==== Marble saved and indexed. Return success ====
 	fmt.Println("- end init marble")
 	return shim.Success(nil)
+}
+
+func (t *SimpleChaincode) queryUsers(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	//   0
+	// "queryString"
+	if len(args) < 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	queryString := args[0]
+
+	queryResults, err := getQueryResultForQueryString(stub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	return shim.Success(queryResults)
 }
