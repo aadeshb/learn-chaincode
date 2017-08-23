@@ -1,20 +1,16 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"time"
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	
 )
-
-//==============================================================================================================================================================
-
-//																			Structs
-
-//=============================================================================================================================================================
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
@@ -31,388 +27,115 @@ type user struct {
 	Email      string `json:"email"`
 	Mobile     string `json:"mobile"`
 	Class	   string `json:"class"`
-}
-// transfer function will append new owner and move current owner to previous owner, 
-type RawMaterial struct {
-	//ObjectType string `json:"docType"`
-	Name 			string `json:"name"`
-	Creator  		string `json:"creator"`
-	Current_Owner   string `json:"currentowner"`
-	//Previous_Owner  string `json:"previousowner"`
-	ClaimTags       string `json:"claimtags"`
-	Location      	string `json:"location"`
-	Date     		string `json:"date"`
-	CertID	   		string `json:"certid"`
-	Referencer		string `json:"referencer"`
+	ObjectType string `json:"docType"`
 }
 
 
-type FinishedGood struct {
-	//ObjectType string `json:"docType"`
-	Name 			string `json:"name"`
-	Creator  		string `json:"creator"`
-	Current_Owner   string `json:"currentowner"`
-	Ingredients 	string `json:"ingredients"`
-	//Previous_Owner  string `json:"previousowner"`
-	Certificates	string `json:"certificates"`
-	ClaimTags       string `json:"claimtags"`
-	Location      	string `json:"location"`
-	Date     		string `json:"date"`
-	CertID	   		string `json:"certid"`
-	Referencer		string `json:"referencer"`
-}
 
-type PurchaseOrder struct{
-
-	Customer  		string `json:"customer"`
-	Vendor   		string `json:"vendor"`
-	ProductID   	string `json:"productid"`
-	Price       	string `json:"price"`
-	Date        	string `json:"date"`
-	PurchaseOrderID	string `json:"purchaseorderid"`
-}
-
-
-//================================================================================================================================================================
-
-//																	Main, Init, Invoke, Query
-
-//================================================================================================================================================================
-
-
-
-
-// The main function is used to bootstrap the code, however we don't have any functionality for it right now
-// it only reports if an error occurs, which never should
+// ===================================================================================
+// Main
+// ===================================================================================
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
-
-
 }
 
-// Init resets all the things
-func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) pb.Response {
-	//If we are given more than one argument for the init function, then it errors
-	//Init shouldn't need any arguments at all actually
+// Init initializes chaincode
+// ===========================
+func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
+	return shim.Success(nil)
+}
 
-	err := stub.PutState("hello_world", []byte(args[0]))
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-	}
-
-
-
-// Invoke is the entry point to invoke a chaincode function
-func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) pb.Response {
+// Invoke - Our entry point for Invocations
+// ========================================
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+	function, args := stub.GetFunctionAndParameters()
 	fmt.Println("invoke is running " + function)
 
 	// Handle different functions
-	//If the init function is called, then we send the args to the init command to be stored under the "hello_world" key
-	if function == "init" {
-		return t.Init(stub, "init", args)
-	} else if function == "Register" {
+	if function == "Register" { //create a new marble
 		return t.Register(stub, args)
-	} else if function == "RegisterRM" {
-		return t.RegisterRM(stub, args)
-	} else if function == "RegisterFP" {
-		return t.RegisterFP(stub, args)
-	} else if function == "makePurchaseOrder" {
-		return t.makePurchaseOrder(stub, args)
-	} else if function == "replyPurchaseOrder" {
-		return t.replyPurchaseOrder(stub, args)
-	} else if function == "TransferAsset" {
-		return t.TransferAsset(stub, args)
 	} 
-	fmt.Println("invoke did not find func: " + function)
-
-	return nil, errors.New("Received unknown function invocation: " + function)
+	fmt.Println("invoke did not find func: " + function) //error
+	return shim.Error("Received unknown function invocation")
 }
 
-// Query is our entry point for queries
-func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) pb.Response {
-	fmt.Println("query is running " + function)
-    
-	if function == "read" { 
-		return t.read(stub, args)
-	} 
-	if function == "richsearch"{
-		return t.richsearch(stub,args)
-	}
-
-
-
-	fmt.Println("query did not find func: " + function)
-	return nil, errors.New("Received unknown function query: " + function)
-}
-
-
-
-//===============================================================================================================================================================
-
-//																			REGISTRATION CODE
-
-//===============================================================================================================================================================
-// write - invoke function to write key/value pair
-func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-	var v5User user
-	var username = args[0]
-	v5User.Firstname = args[1]
-    v5User.Lastname = args[2]
-	v5User.DOB = args[3]
-	v5User.Email = args[4]
-	v5User.Mobile = args[5]
-	v5User.Class = args[6]
-
-	bytes, err := json.Marshal(v5User)
-    
-    if err != nil { return nil, errors.New("Error creating v5User record") }
-
-	err = stub.PutState(username, bytes)
-	return nil, nil
-}
-
-
-
-func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-	var r RawMaterial
-	var prodid = args[0]
-
-	var a = time.Now()
-	var b = a.Format("20060102150405") 
-	r.Name = args[1]
-	r.Creator = args[2]
-    r.Current_Owner = args[3]
-	r.ClaimTags = args[4]
-	r.Location = args[5]
-	r.Date = args[6]
-	r.CertID = args[7]
-	r.Referencer = prodid + "-" + b
-
-	bytes, err := json.Marshal(r)
-    
-    if err != nil { return nil, errors.New("Error creating raw material") }
-
-	err = stub.PutState(prodid, bytes)
-
-
-	return nil, nil
-}
-
-
-
-func (t *SimpleChaincode) RegisterFP(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-	var f FinishedGood 
-	var prodid = args[0]
-
-	var a = time.Now()
-	var b = a.Format("20060102150405") 
-
-	f.Name = args[1]
-	f.Creator = args[2]
-    f.Current_Owner = args[3]
-    f.Ingredients = args[4]	//Ingredients will hold pointers to all the ingredients, all of their product IDs will be held here
-	f.ClaimTags = args[5]
-	f.Location = args[6]
-	f.Date = args[7]
-	f.CertID = args[8]
-	f.Referencer = prodid + "-" + b
-
-	bytes, err := json.Marshal(f)
-    
-    if err != nil { return nil, errors.New("Error creating raw material") }
-
-	err = stub.PutState(prodid, bytes)
-
-
-	return nil, nil
-}
-
-
-
-
-//====================================================================================================================================================================
-
-//																			PURCHASE ORDERS
-
-//====================================================================================================================================================================
-
-// Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
-// data to the ledger which can be read later on 
-// makePurchaseOrder has two user given inputs, 1 - supplier id, 2- manufacturer id
-func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-
-	var p PurchaseOrder
-	var poid = args[0]
-
-	var a = time.Now()
-	var b = a.Format("20060102150405") 
-
-	//var userkeycombo = username + "-" + b
-
-	p.Customer = args[1]
-    p.Vendor = args[2]
-	p.ProductID = args[3]
-	p.Price = args[4]
-	p.Date = args[5]
-	p.PurchaseOrderID = poid + "-" + b
-	//r.Referencer = userkeycombo
-
-	bytes, err := json.Marshal(p)
-    
-    if err != nil { return nil, errors.New("Error creating raw material") }
-
-	err = stub.PutState(poid, bytes)
-	return nil, nil
-}
-
-
-
-func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-
-	var key, value string
-	var err error
-	
-	var a = time.Now()
-	var b = a.Format("20060102150405") 
-	key = args[0] 
-	var body = args[2] //this will be the yes or no
-	value = args[1] + "-" + b +"-"+  key + " " + body
-
-
-
-	//here will be the automatic transfer functions calling
-
-
-
-
-
-
-
-
-
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
-	return nil, nil
-}
-
-
-
-// ==================================================================================================================================================================
-
-// 																	SENDING GOODS/TRANSFERING ASSETS
-
-// ==================================================================================================================================================================
-
-
-func (t *SimpleChaincode) TransferAsset(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-	var err error
-	
-	//      0       		 1
-	// "ProductID", "new owner name"
-	
-	
-	RMAsBytes, err := stub.GetState(args[0])
-	if err != nil {
-		return nil, errors.New("Failed to get thing")
-	}
-
-	res := RawMaterial{}
-	json.Unmarshal(RMAsBytes, &res)										//un stringify it aka JSON.parse()
-	res.Current_Owner = args[1]														//change the user
-	
-	jsonAsBytes, _ := json.Marshal(res)
-	err = stub.PutState(args[0], jsonAsBytes)								//rewrite the marble with id as key
-	if err != nil {
-		return nil, err
-	}
-	
-	fmt.Println("- end set user")
-	return nil, nil
-}
-
-
-//========================================================================================================================================================================
-
-//																				Certificate Stuff
-
-//========================================================================================================================================================================
-
-
-func (t *SimpleChaincode) awardCertificate(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-
-	var key, value string
-	var err error
-	fmt.Println("running write()")
-
-
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
-	}
-
-	key = args[0] //rename 
-	value = args[1]
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
-	return nil, nil
-}
-
-
-
-//===========================================================================================================================================================================
-
-//																			   Read
-
-//===========================================================================================================================================================================
-
-
-
-
-// read - query function to read key/value pair
-func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-	var key, jsonResp string
+// ============================================================
+// initMarble - create a new marble, store into chaincode state
+// ============================================================
+func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
 
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
+//	Firstname  string `json:"firstname"`		0
+//	Lastname   string `json:"lastname"`			1
+//	userID	   string `json:"userid"`			2
+//	DOB        string `json:"dob"`				3
+//	Email      string `json:"email"`			4
+//	Mobile     string `json:"mobile"`			5
+//	Class	   string `json:"class"`			6
+	
+	//   0       1       2     3
+	// "asdf", "blue", "35", "bob"
+	if len(args) != 7 {
+		return shim.Error("Incorrect number of arguments. Expecting 7")
 	}
 
-	key = args[0]
-	valAsbytes, err := stub.GetState(key)
+	// ==== Input sanitation ====
+	
+	fname := args[0]
+	lname := args[1]
+	uid := args[2]
+	userdob := args[3]
+	useremail := args[4]
+	usermobile := args[5]
+	userclass := args[6]
+
+	
+
+	// ==== Check if user already exists ====
+	fnameAsBytes, err := stub.GetState(fname)
 	if err != nil {
-		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
-		return nil, errors.New(jsonResp)
+		return shim.Error("Failed to get marble: " + err.Error())
+	} else if fnameAsBytes != nil {
+		fmt.Println("This marble already exists: " + fname)
+		return shim.Error("This marble already exists: " + fname)
 	}
 
-	return valAsbytes, nil
-}
-
-
-
-func (t *SimpleChaincode) richsearch(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
-	var key, jsonResp string
-	var err error
-
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
-	}
-
-	key = args[0]
-	valAsbytes, err := stub.GetState(key)
+	// ==== Create user object and marshal to JSON ====
+	objectType := "user"
+	user := &user{fname, lname, uid, userdob, useremail, usermobile, userclass}
+	userJSONasBytes, err := json.Marshal(user)
 	if err != nil {
-		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
-		return nil, errors.New(jsonResp)
+		return shim.Error(err.Error())
+	}
+	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
+	//marbleJSONasString := `{"docType":"Marble",  "name": "` + marbleName + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "owner": "` + owner + `"}`
+	//marbleJSONasBytes := []byte(str)
+
+	// === Save user to state ===
+	err = stub.PutState(uid, userJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
 	}
 
-	return valAsbytes, nil
-}
+	//  ==== Index the marble to enable color-based range queries, e.g. return all blue marbles ====
+	//  An 'index' is a normal key/value entry in state.
+	//  The key is a composite key, with the elements that you want to range query on listed first.
+	//  In our case, the composite key is based on indexName~color~name.
+	//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
+	indexName := "uid~fname"
+	uidIndexKey, err := stub.CreateCompositeKey(indexName, []string{user.userID, user.fname})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	value := []byte{0x00}
+	stub.PutState(uidIndexKey, value)
 
+	// ==== Marble saved and indexed. Return success ====
+	fmt.Println("- end init marble")
+	return shim.Success(nil)
+}
