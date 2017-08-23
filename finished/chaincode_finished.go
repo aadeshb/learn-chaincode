@@ -1,196 +1,418 @@
-/*
-Copyright IBM Corp. 2016 All Rights Reserved.
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-		 http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package main
 
-//WARNING - this chaincode's ID is hard-coded in chaincode_example04 to illustrate one way of
-//calling chaincode from a chaincode. If this example is modified, chaincode_example04.go has
-//to be modified as well with the new ID of chaincode_example02.
-//chaincode_example05 show's how chaincode ID can be passed in as a parameter instead of
-//hard-coding.
-
 import (
+	"errors"
 	"fmt"
-	"strconv"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"time"
+	"encoding/json"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	
 )
+
+//==============================================================================================================================================================
+
+//																			Structs
+
+//=============================================================================================================================================================
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
 
-func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	fmt.Println("ex02 Init")
-	_, args := stub.GetFunctionAndParameters()
-	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
-	var err error
 
-	if len(args) != 4 {
-		return shim.Error("Incorrect number of arguments. Expecting 4")
-	}
 
-	// Initialize the chaincode
-	A = args[0]
-	Aval, err = strconv.Atoi(args[1])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
-	}
-	B = args[2]
-	Bval, err = strconv.Atoi(args[3])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
-	}
-	fmt.Printf("Aval = %d, Bval = %d\n", Aval, Bval)
-
-	// Write the state to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	return shim.Success(nil)
+type user struct {
+	//ObjectType string `json:"docType"`
+	Firstname  string `json:"firstname"`
+	Lastname   string `json:"lastname"`
+	userID	   string `json:"userid"`
+	DOB        string `json:"dob"`
+	Email      string `json:"email"`
+	Mobile     string `json:"mobile"`
+	Class	   string `json:"class"`
+}
+// transfer function will append new owner and move current owner to previous owner, 
+type RawMaterial struct {
+	//ObjectType string `json:"docType"`
+	Name 			string `json:"name"`
+	Creator  		string `json:"creator"`
+	Current_Owner   string `json:"currentowner"`
+	//Previous_Owner  string `json:"previousowner"`
+	ClaimTags       string `json:"claimtags"`
+	Location      	string `json:"location"`
+	Date     		string `json:"date"`
+	CertID	   		string `json:"certid"`
+	Referencer		string `json:"referencer"`
 }
 
-func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	fmt.Println("ex02 Invoke")
-	function, args := stub.GetFunctionAndParameters()
-	if function == "invoke" {
-		// Make payment of X units from A to B
-		return t.invoke(stub, args)
-	} else if function == "delete" {
-		// Deletes an entity from its state
-		return t.delete(stub, args)
-	} else if function == "query" {
-		// the old "Query" is now implemtned in invoke
-		return t.query(stub, args)
-	}
 
-	return shim.Error("Invalid invoke function name. Expecting \"invoke\" \"delete\" \"query\"")
+type FinishedGood struct {
+	//ObjectType string `json:"docType"`
+	Name 			string `json:"name"`
+	Creator  		string `json:"creator"`
+	Current_Owner   string `json:"currentowner"`
+	Ingredients 	string `json:"ingredients"`
+	//Previous_Owner  string `json:"previousowner"`
+	Certificates	string `json:"certificates"`
+	ClaimTags       string `json:"claimtags"`
+	Location      	string `json:"location"`
+	Date     		string `json:"date"`
+	CertID	   		string `json:"certid"`
+	Referencer		string `json:"referencer"`
 }
 
-// Transaction makes payment of X units from A to B
-func (t *SimpleChaincode) invoke(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
-	var X int          // Transaction value
-	var err error
+type PurchaseOrder struct{
 
-	if len(args) != 3 {
-		return shim.Error("Incorrect number of arguments. Expecting 3")
-	}
-
-	A = args[0]
-	B = args[1]
-
-	// Get the state from the ledger
-	// TODO: will be nice to have a GetAllState call to ledger
-	Avalbytes, err := stub.GetState(A)
-	if err != nil {
-		return shim.Error("Failed to get state")
-	}
-	if Avalbytes == nil {
-		return shim.Error("Entity not found")
-	}
-	Aval, _ = strconv.Atoi(string(Avalbytes))
-
-	Bvalbytes, err := stub.GetState(B)
-	if err != nil {
-		return shim.Error("Failed to get state")
-	}
-	if Bvalbytes == nil {
-		return shim.Error("Entity not found")
-	}
-	Bval, _ = strconv.Atoi(string(Bvalbytes))
-
-	// Perform the execution
-	X, err = strconv.Atoi(args[2])
-	if err != nil {
-		return shim.Error("Invalid transaction amount, expecting a integer value")
-	}
-	Aval = Aval - X
-	Bval = Bval + X
-	fmt.Printf("Aval = %d, Bval = %d\n", Aval, Bval)
-
-	// Write the state back to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	return shim.Success(nil)
+	Customer  		string `json:"customer"`
+	Vendor   		string `json:"vendor"`
+	ProductID   	string `json:"productid"`
+	Price       	string `json:"price"`
+	Date        	string `json:"date"`
+	PurchaseOrderID	string `json:"purchaseorderid"`
 }
 
-// Deletes an entity from state
-func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting 1")
-	}
 
-	A := args[0]
+//================================================================================================================================================================
 
-	// Delete the key from the state in ledger
-	err := stub.DelState(A)
-	if err != nil {
-		return shim.Error("Failed to delete state")
-	}
+//																	Main, Init, Invoke, Query
 
-	return shim.Success(nil)
-}
+//================================================================================================================================================================
 
-// query callback representing the query of a chaincode
-func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	var A string // Entities
-	var err error
 
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the person to query")
-	}
 
-	A = args[0]
 
-	// Get the state from the ledger
-	Avalbytes, err := stub.GetState(A)
-	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to get state for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	if Avalbytes == nil {
-		jsonResp := "{\"Error\":\"Nil amount for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	fmt.Printf("Query Response:%s\n", jsonResp)
-	return shim.Success(Avalbytes)
-}
-
+// The main function is used to bootstrap the code, however we don't have any functionality for it right now
+// it only reports if an error occurs, which never should
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
+
+
 }
+
+// Init resets all the things
+func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) pb.Response {
+	//If we are given more than one argument for the init function, then it errors
+	//Init shouldn't need any arguments at all actually
+
+	err := stub.PutState("hello_world", []byte(args[0]))
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+	}
+
+
+
+// Invoke is the entry point to invoke a chaincode function
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) pb.Response {
+	fmt.Println("invoke is running " + function)
+
+	// Handle different functions
+	//If the init function is called, then we send the args to the init command to be stored under the "hello_world" key
+	if function == "init" {
+		return t.Init(stub, "init", args)
+	} else if function == "Register" {
+		return t.Register(stub, args)
+	} else if function == "RegisterRM" {
+		return t.RegisterRM(stub, args)
+	} else if function == "RegisterFP" {
+		return t.RegisterFP(stub, args)
+	} else if function == "makePurchaseOrder" {
+		return t.makePurchaseOrder(stub, args)
+	} else if function == "replyPurchaseOrder" {
+		return t.replyPurchaseOrder(stub, args)
+	} else if function == "TransferAsset" {
+		return t.TransferAsset(stub, args)
+	} 
+	fmt.Println("invoke did not find func: " + function)
+
+	return nil, errors.New("Received unknown function invocation: " + function)
+}
+
+// Query is our entry point for queries
+func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) pb.Response {
+	fmt.Println("query is running " + function)
+    
+	if function == "read" { 
+		return t.read(stub, args)
+	} 
+	if function == "richsearch"{
+		return t.richsearch(stub,args)
+	}
+
+
+
+	fmt.Println("query did not find func: " + function)
+	return nil, errors.New("Received unknown function query: " + function)
+}
+
+
+
+//===============================================================================================================================================================
+
+//																			REGISTRATION CODE
+
+//===============================================================================================================================================================
+// write - invoke function to write key/value pair
+func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+	var v5User user
+	var username = args[0]
+	v5User.Firstname = args[1]
+    v5User.Lastname = args[2]
+	v5User.DOB = args[3]
+	v5User.Email = args[4]
+	v5User.Mobile = args[5]
+	v5User.Class = args[6]
+
+	bytes, err := json.Marshal(v5User)
+    
+    if err != nil { return nil, errors.New("Error creating v5User record") }
+
+	err = stub.PutState(username, bytes)
+	return nil, nil
+}
+
+
+
+func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+	var r RawMaterial
+	var prodid = args[0]
+
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
+	r.Name = args[1]
+	r.Creator = args[2]
+    r.Current_Owner = args[3]
+	r.ClaimTags = args[4]
+	r.Location = args[5]
+	r.Date = args[6]
+	r.CertID = args[7]
+	r.Referencer = prodid + "-" + b
+
+	bytes, err := json.Marshal(r)
+    
+    if err != nil { return nil, errors.New("Error creating raw material") }
+
+	err = stub.PutState(prodid, bytes)
+
+
+	return nil, nil
+}
+
+
+
+func (t *SimpleChaincode) RegisterFP(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+	var f FinishedGood 
+	var prodid = args[0]
+
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
+
+	f.Name = args[1]
+	f.Creator = args[2]
+    f.Current_Owner = args[3]
+    f.Ingredients = args[4]	//Ingredients will hold pointers to all the ingredients, all of their product IDs will be held here
+	f.ClaimTags = args[5]
+	f.Location = args[6]
+	f.Date = args[7]
+	f.CertID = args[8]
+	f.Referencer = prodid + "-" + b
+
+	bytes, err := json.Marshal(f)
+    
+    if err != nil { return nil, errors.New("Error creating raw material") }
+
+	err = stub.PutState(prodid, bytes)
+
+
+	return nil, nil
+}
+
+
+
+
+//====================================================================================================================================================================
+
+//																			PURCHASE ORDERS
+
+//====================================================================================================================================================================
+
+// Purchase order code and "write" code are the exact same, because in essence, both should do the same job, which is to write
+// data to the ledger which can be read later on 
+// makePurchaseOrder has two user given inputs, 1 - supplier id, 2- manufacturer id
+func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+
+	var p PurchaseOrder
+	var poid = args[0]
+
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
+
+	//var userkeycombo = username + "-" + b
+
+	p.Customer = args[1]
+    p.Vendor = args[2]
+	p.ProductID = args[3]
+	p.Price = args[4]
+	p.Date = args[5]
+	p.PurchaseOrderID = poid + "-" + b
+	//r.Referencer = userkeycombo
+
+	bytes, err := json.Marshal(p)
+    
+    if err != nil { return nil, errors.New("Error creating raw material") }
+
+	err = stub.PutState(poid, bytes)
+	return nil, nil
+}
+
+
+
+func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+
+	var key, value string
+	var err error
+	
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
+	key = args[0] 
+	var body = args[2] //this will be the yes or no
+	value = args[1] + "-" + b +"-"+  key + " " + body
+
+
+
+	//here will be the automatic transfer functions calling
+
+
+
+
+
+
+
+
+
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+
+
+// ==================================================================================================================================================================
+
+// 																	SENDING GOODS/TRANSFERING ASSETS
+
+// ==================================================================================================================================================================
+
+
+func (t *SimpleChaincode) TransferAsset(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+	var err error
+	
+	//      0       		 1
+	// "ProductID", "new owner name"
+	
+	
+	RMAsBytes, err := stub.GetState(args[0])
+	if err != nil {
+		return nil, errors.New("Failed to get thing")
+	}
+
+	res := RawMaterial{}
+	json.Unmarshal(RMAsBytes, &res)										//un stringify it aka JSON.parse()
+	res.Current_Owner = args[1]														//change the user
+	
+	jsonAsBytes, _ := json.Marshal(res)
+	err = stub.PutState(args[0], jsonAsBytes)								//rewrite the marble with id as key
+	if err != nil {
+		return nil, err
+	}
+	
+	fmt.Println("- end set user")
+	return nil, nil
+}
+
+
+//========================================================================================================================================================================
+
+//																				Certificate Stuff
+
+//========================================================================================================================================================================
+
+
+func (t *SimpleChaincode) awardCertificate(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+
+	var key, value string
+	var err error
+	fmt.Println("running write()")
+
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	}
+
+	key = args[0] //rename 
+	value = args[1]
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+
+
+//===========================================================================================================================================================================
+
+//																			   Read
+
+//===========================================================================================================================================================================
+
+
+
+
+// read - query function to read key/value pair
+func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+	var key, jsonResp string
+	var err error
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
+	}
+
+	key = args[0]
+	valAsbytes, err := stub.GetState(key)
+	if err != nil {
+		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	return valAsbytes, nil
+}
+
+
+
+func (t *SimpleChaincode) richsearch(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) pb.Response {
+	var key, jsonResp string
+	var err error
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
+	}
+
+	key = args[0]
+	valAsbytes, err := stub.GetState(key)
+	if err != nil {
+		jsonResp = "{\"Error\":\"Failed to get state for " + key + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	return valAsbytes, nil
+}
+
