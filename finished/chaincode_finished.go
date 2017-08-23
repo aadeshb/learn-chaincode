@@ -19,7 +19,7 @@ type SimpleChaincode struct {
 
 
 type user struct {
-	//ObjectType string `json:"docType"`
+	
 	Firstname  string `json:"firstname"`
 	Lastname   string `json:"lastname"`
 	userID	   string `json:"userid"`
@@ -30,11 +30,25 @@ type user struct {
 	ObjectType string `json:"docType"`
 }
 
+type RawMaterial struct {
+	
+	RMID 			string `json:"rmid"`
+	Creator  		string `json:"creator"`
+	Current_Owner   string `json:"currentowner"`
+	ClaimTags       string `json:"claimtags"`
+	Location      	string `json:"location"`
+	Date     		string `json:"date"`
+	CertID	   		string `json:"certid"`
+	Referencer		string `json:"referencer"`
+	ObjectType      string `json:"docType"`
+}
 
 
-// ===================================================================================
-// Main
-// ===================================================================================
+// =============================================================================================================================================================
+
+// 																					MAIN FUNCTIONS
+
+// ==============================================================================================================================================================
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
@@ -55,8 +69,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	fmt.Println("invoke is running " + function)
 
 	// Handle different functions
-	if function == "Register" { //create a new marble
+	if function == "Register" { //create a new user
 		return t.Register(stub, args)
+	} else if function == "RegisterRM" { 
+		return t.read(stub, args) 
 	} else if function == "read" { 
 		return t.read(stub, args) 
 	}
@@ -65,9 +81,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 }
 
 
-// ============================================================
-// initMarble - create a new marble, store into chaincode state
-// ============================================================
+//============================================================================================================================================================================
+
+//																				REGISTRATION CODE BELOW
+
+//=============================================================================================================================================================================
+
+
+
 func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
 
@@ -79,8 +100,7 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 //	Mobile     string `json:"mobile"`			5
 //	Class	   string `json:"class"`			6
 	
-	//   0       1       2     3
-	// "asdf", "blue", "35", "bob"
+	
 	if len(args) != 7 {
 		return shim.Error("Incorrect number of arguments. Expecting 7")
 	}
@@ -96,14 +116,14 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	userclass := args[6]
 
 	
-
+	// This wont matter once we implement UUID 
 	// ==== Check if user already exists ====
-	fnameAsBytes, err := stub.GetState(fname)
+	fnameAsBytes, err := stub.GetState(uid)		//Change this to uid not fname
 	if err != nil {
-		return shim.Error("Failed to get marble: " + err.Error())
+		return shim.Error("Failed to get user: " + err.Error())
 	} else if fnameAsBytes != nil {
-		fmt.Println("This marble already exists: " + fname)
-		return shim.Error("This marble already exists: " + fname)
+		fmt.Println("This user already exists: " + fname)
+		return shim.Error("This user already exists: " + fname)
 	}
 
 	// ==== Create user object and marshal to JSON ====
@@ -113,9 +133,7 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	//Alternatively, build the marble json string manually if you don't want to use struct marshalling
-	//marbleJSONasString := `{"docType":"Marble",  "name": "` + marbleName + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "owner": "` + owner + `"}`
-	//marbleJSONasBytes := []byte(str)
+	
 
 	// === Save user to state ===
 	err = stub.PutState(uid, userJSONasBytes)
@@ -123,7 +141,7 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 		return shim.Error(err.Error())
 	}
 
-	//  ==== Index the marble to enable color-based range queries, e.g. return all blue marbles ====
+	//  ==== Index the user to enable color-based range queries, e.g. return all blue users ====
 	//  An 'index' is a normal key/value entry in state.
 	//  The key is a composite key, with the elements that you want to range query on listed first.
 	//  In our case, the composite key is based on indexName~color~name.
@@ -133,13 +151,87 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the user.
 	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
 	value := []byte{0x00}
 	stub.PutState(uidIndexKey, value)
 
-	// ==== Marble saved and indexed. Return success ====
-	fmt.Println("- end init marble")
+	// ==== user saved and indexed. Return success ====
+	fmt.Println("- end init user")
+	return shim.Success(nil)
+}
+
+
+func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var err error
+
+//	RMID 			string `json:"rmid"`					0
+//	Creator  		string `json:"creator"`					1
+//	Current_Owner   string `json:"currentowner"`			2
+//	ClaimTags       string `json:"claimtags"`				3
+//	Location      	string `json:"location"`				4
+//	Date     		string `json:"date"`					5
+//	CertID	   		string `json:"certid"`					6
+//	Referencer		string `json:"referencer"`				7
+//	ObjectType      string `json:"docType"`					8
+	
+	
+	
+
+	// ==== Input sanitation ====
+	
+	rawid := args[0]
+	originalcreator := args[1]
+	cowner := args[2]
+	claimtags := args[3]
+	loc := args[4]
+	dates := args[5]
+	userclass := args[6]
+	ref := args[7]
+
+	
+	// This wont matter once we implement UUID 
+	// ==== Check if user already exists ====
+	rawidAsBytes, err := stub.GetState(rawid)		
+	if err != nil {
+		return shim.Error("Failed to get user: " + err.Error())
+	} else if rawidAsBytes != nil {
+		fmt.Println("This user already exists: " + rawid)
+		return shim.Error("This user already exists: " + rawid)
+	}
+
+	// ==== Create user object and marshal to JSON ====
+	objectType := "RawMaterial"
+	RawMaterial := &RawMaterial{rawid, originalcreator, cowner, claimtags, loc, dates, userclass, ref, objectType}
+	RawMaterialJSONasBytes, err := json.Marshal(RawMaterial)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	
+
+	// === Save user to state ===
+	err = stub.PutState(rawid, RawMaterialJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	//  ==== Index the user to enable color-based range queries, e.g. return all blue users ====
+	//  An 'index' is a normal key/value entry in state.
+	//  The key is a composite key, with the elements that you want to range query on listed first.
+	//  In our case, the composite key is based on indexName~color~name.
+	//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
+	indexName := "rawid~cowner"
+	rawidIndexKey, err := stub.CreateCompositeKey(indexName, []string{RawMaterial.RMID, RawMaterial.Current_Owner})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the user.
+	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	value := []byte{0x00}
+	stub.PutState(rawidIndexKey, value)
+
+	// ==== user saved and indexed. Return success ====
+	fmt.Println("- end init user")
 	return shim.Success(nil)
 }
 
