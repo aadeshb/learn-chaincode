@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/json"
 	"fmt"
 	//"strconv"
@@ -57,12 +57,13 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	// Handle different functions
 	if function == "Register" { //create a new marble
 		return t.Register(stub, args)
-	} else if function == "queryUsers" { 
-		return t.queryUsers(stub, args) 
+	} else if function == "read" { 
+		return t.read(stub, args) 
 	}
 	fmt.Println("invoke did not find func: " + function) //error
 	return shim.Error("Received unknown function invocation")
 }
+
 
 // ============================================================
 // initMarble - create a new marble, store into chaincode state
@@ -142,62 +143,22 @@ func (t *SimpleChaincode) Register(stub shim.ChaincodeStubInterface, args []stri
 	return shim.Success(nil)
 }
 
-func (t *SimpleChaincode) queryUsers(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var A string // Entities
+	var err error
 
-	//   0
-	// "queryString"
-	if len(args) < 1 {
-		return shim.Error("Incorrect number of arguments. Expecting 1")
-	}
+	A = args[0]
 
-	queryString := args[0]
-
-	queryResults, err := getQueryResultForQueryString(stub, queryString)
+	// Get the state from the ledger
+	Avalbytes, err := stub.GetState(A)
 	if err != nil {
-		return shim.Error(err.Error())
+		jsonResp := "{\"Error\":\"Failed to get state for " + A + "\"}"
+		return shim.Error(jsonResp)
 	}
-	return shim.Success(queryResults)
+
+
+
+	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
+	fmt.Printf("Query Response:%s\n", jsonResp)
+	return shim.Success(Avalbytes)
 }
-
-func getQueryResultForQueryString(stub shim.ChaincodeStubInterface, queryString string) ([]byte, error) {
-
-	fmt.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
-
-	resultsIterator, err := stub.GetQueryResult(queryString)
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	// buffer is a JSON array containing QueryRecords
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-
-	bArrayMemberAlreadyWritten := false
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-		if err != nil {
-			return nil, err
-		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"Key\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(queryResponse.Key)
-		buffer.WriteString("\"")
-
-		buffer.WriteString(", \"Record\":")
-		// Record is a JSON object, so we write as-is
-		buffer.WriteString(string(queryResponse.Value))
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
-	}
-	buffer.WriteString("]")
-
-	fmt.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
-
-	return buffer.Bytes(), nil
-}
-
