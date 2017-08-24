@@ -66,12 +66,12 @@ type FinishedGood struct {
 
 type PurchaseOrder struct{
 
+	PurchaseOrderID	string `json:"purchaseorderid"`
 	Customer  		string `json:"customer"`
 	Vendor   		string `json:"vendor"`
 	ProductID   	string `json:"productid"`
 	Price       	string `json:"price"`
 	Date        	string `json:"date"`
-	PurchaseOrderID	string `json:"purchaseorderid"`
 	ObjectType 		string `json:"docType"`
 }
 
@@ -108,6 +108,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.RegisterFP(stub, args) 
 	} else if function == "makePurchaseOrder" { 
 		return t.makePurchaseOrder(stub, args) 
+	} else if function == "replyPurchaseOrder" { 
+		return t.replyPurchaseOrder(stub, args) 
 	} else if function == "read" { 
 		return t.read(stub, args) 
 	}
@@ -353,37 +355,38 @@ func (t *SimpleChaincode) RegisterFP(stub shim.ChaincodeStubInterface, args []st
 func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var err error
 
-//	Customer  		string `json:"customer"`				0
-//	Vendor   		string `json:"vendor"`					1	
-//	ProductID   	string `json:"productid"`				2
-//	Price       	string `json:"price"`					3
-//	Date        	string `json:"date"`					4
-//	ObjectType      string `json:"doctype"`					5
-	
+//	PurchaseOrderID	string `json:"purchaseorderid"`		0
+//	Customer  		string `json:"customer"`			1
+//	Vendor   		string `json:"vendor"`				2
+//	ProductID   	string `json:"productid"`			3
+//	Price       	string `json:"price"`				4
+//	Date        	string `json:"date"`				5
+//	ObjectType 		string `json:"docType"`				6
 	
 	// ==== Input sanitation ====
 	
-	prodid := args[0]
+	purchid := args[0]
 	cust := args[1]
 	vend := args[2]
-	price:= args[3]
-	dat := args[4]
-	class := args[5]
+	prodid := args[3]
+	price:= args[4]
+	dat := args[5]
+	
 
 	
 	// This wont matter once we implement UUID 
 	// ==== Check if product already exists ====
-	prodAsBytes, err := stub.GetState(prodid)		
+	purchAsBytes, err := stub.GetState(purchid)		
 	if err != nil {
 		return shim.Error("Failed to get product: " + err.Error())
-	} else if prodAsBytes != nil {
-		fmt.Println("This product already exists: " + prodid)
-		return shim.Error("This product already exists: " + prodid)
+	} else if purchAsBytes != nil {
+		fmt.Println("This product already exists: " + purchid)
+		return shim.Error("This product already exists: " + purchid)
 	}
 
 	// ==== Create user object and marshal to JSON ====
 	objectType := "PurchaseOrder"
-	PurchaseOrder := &PurchaseOrder{prodid, cust, vend, price, dat, class, objectType}
+	PurchaseOrder := &PurchaseOrder{purchid, cust, vend, prodid, price, dat, objectType}
 	prodJSONasBytes, err := json.Marshal(PurchaseOrder)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -391,7 +394,7 @@ func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, ar
 	
 
 	// === Save user to state ===
-	err = stub.PutState(prodid, prodJSONasBytes)
+	err = stub.PutState(purchid, prodJSONasBytes)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
