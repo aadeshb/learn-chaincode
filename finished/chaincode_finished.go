@@ -12,11 +12,16 @@ import (
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
-// SimpleChaincode example simple Chaincode implementation
+//=============================================================================================================================================================================
+
+//																					Structs
+
+//=============================================================================================================================================================================
+
+
+
 type SimpleChaincode struct {
 }
-
-
 
 type user struct {
 	
@@ -33,16 +38,42 @@ type user struct {
 type RawMaterial struct {
 	
 	RMID 			string `json:"rmid"`
+	Item			string `json:"item"`
 	Creator  		string `json:"creator"`
 	Current_Owner   string `json:"currentowner"`
 	ClaimTags       string `json:"claimtags"`
 	Location      	string `json:"location"`
 	Date     		string `json:"date"`
 	CertID	   		string `json:"certid"`
-	Referencer		string `json:"referencer"`
 	ObjectType      string `json:"docType"`
 }
 
+
+type FinishedGood struct {
+	FPID			string `json:"fpid"`
+	Name 			string `json:"name"`
+	Creator  		string `json:"creator"`
+	Current_Owner   string `json:"currentowner"`
+	Ingredients 	string `json:"ingredients"`
+	//Previous_Owner  string `json:"previousowner"`
+	Certificates	string `json:"certificates"`
+	ClaimTags       string `json:"claimtags"`
+	Location      	string `json:"location"`
+	Date     		string `json:"date"`
+	CertID	   		string `json:"certid"`
+	ObjectType 		string `json:"docType"`
+}
+
+type PurchaseOrder struct{
+
+	Customer  		string `json:"customer"`
+	Vendor   		string `json:"vendor"`
+	ProductID   	string `json:"productid"`
+	Price       	string `json:"price"`
+	Date        	string `json:"date"`
+	PurchaseOrderID	string `json:"purchaseorderid"`
+	ObjectType 		string `json:"docType"`
+}
 
 // =============================================================================================================================================================
 
@@ -72,7 +103,11 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	if function == "Register" { //create a new user
 		return t.Register(stub, args)
 	} else if function == "RegisterRM" { 
-		return t.read(stub, args) 
+		return t.RegisterRM(stub, args) 
+	} else if function == "RegisterFP" { 
+		return t.RegisterFP(stub, args) 
+	} else if function == "makePurchaseOrder" { 
+		return t.makePurchaseOrder(stub, args) 
 	} else if function == "read" { 
 		return t.read(stub, args) 
 	}
@@ -166,13 +201,13 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 	var err error
 
 //	RMID 			string `json:"rmid"`					0
-//	Creator  		string `json:"creator"`					1
-//	Current_Owner   string `json:"currentowner"`			2
-//	ClaimTags       string `json:"claimtags"`				3
-//	Location      	string `json:"location"`				4
-//	Date     		string `json:"date"`					5
-//	CertID	   		string `json:"certid"`					6
-//	Referencer		string `json:"referencer"`				7
+//  Item 			string `json:"item"`					1
+//	Creator  		string `json:"creator"`					2
+//	Current_Owner   string `json:"currentowner"`			3
+//	ClaimTags       string `json:"claimtags"`				4
+//	Location      	string `json:"location"`				5
+//	Date     		string `json:"date"`					6
+//	CertID	   		string `json:"certid"`					7
 //	ObjectType      string `json:"docType"`					8
 	
 	
@@ -181,13 +216,14 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 	// ==== Input sanitation ====
 	
 	rawid := args[0]
-	originalcreator := args[1]
-	cowner := args[2]
-	claimtags := args[3]
-	loc := args[4]
-	dates := args[5]
-	userclass := args[6]
-	ref := args[7]
+	item := args[1]
+	originalcreator := args[2]
+	cowner := args[3]
+	claimtags := args[4]
+	loc := args[5]
+	dates := args[6]
+	userclass := args[7]
+	
 
 	
 	// This wont matter once we implement UUID 
@@ -202,7 +238,7 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 
 	// ==== Create user object and marshal to JSON ====
 	objectType := "RawMaterial"
-	RawMaterial := &RawMaterial{rawid, originalcreator, cowner, claimtags, loc, dates, userclass, ref, objectType}
+	RawMaterial := &RawMaterial{rawid, item, originalcreator, cowner, claimtags, loc, dates, userclass, objectType}
 	RawMaterialJSONasBytes, err := json.Marshal(RawMaterial)
 	if err != nil {
 		return shim.Error(err.Error())
@@ -234,6 +270,169 @@ func (t *SimpleChaincode) RegisterRM(stub shim.ChaincodeStubInterface, args []st
 	fmt.Println("- end init user")
 	return shim.Success(nil)
 }
+
+
+func (t *SimpleChaincode) RegisterFP(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var err error
+
+//	ObjectType 		string `json:"docType"`					0
+//	FPID			string `json:"fpid"`					1	
+//	Name 			string `json:"name"`					2
+//	Creator  		string `json:"creator"`					3
+//	Current_Owner   string `json:"currentowner"`			4
+//	Ingredients 	string `json:"ingredients"`				5
+//	//Previous_Owner  string `json:"previousowner"`			6
+//	Certificates	string `json:"certificates"`			7
+//	ClaimTags       string `json:"claimtags"`				8
+//	Location      	string `json:"location"`				9	
+//	Date     		string `json:"date"`					10
+//	CertID	   		string `json:"certid"`					11
+	
+	
+	
+
+	// ==== Input sanitation ====
+	
+	fpid_i := args[0]
+	name_i := args[1]
+	originalcreator_i := args[2]
+	cowner_i := args[3]
+	ingredients_i := args[4]
+	certificates_i := args[5]
+	claimtags_i := args[6]
+	loc_i := args[7]
+	dates_i := args[8]
+	certid_i := args[9]
+	
+
+	// This wont matter once we implement UUID 
+	// ==== Check if user already exists ====
+	fpid_iAsBytes, err := stub.GetState(fpid_i)		
+	if err != nil {
+		return shim.Error("Failed to get user: " + err.Error())
+	} else if fpid_iAsBytes != nil {
+		fmt.Println("This user already exists: " + fpid_i)
+		return shim.Error("This user already exists: " + fpid_i)
+	}
+
+	// ==== Create user object and marshal to JSON ====
+	objectType := "FinishedGood"
+	FinishedGood := &FinishedGood{fpid_i, name_i, originalcreator_i, cowner_i, ingredients_i, certificates_i, claimtags_i, loc_i, dates_i, certid_i, objectType}
+	FinishedGoodJSONasBytes, err := json.Marshal(FinishedGood)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	
+
+	// === Save user to state ===
+	err = stub.PutState(fpid_i, FinishedGoodJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	//  ==== Index the user to enable color-based range queries, e.g. return all blue users ====
+	//  An 'index' is a normal key/value entry in state.
+	//  The key is a composite key, with the elements that you want to range query on listed first.
+	//  In our case, the composite key is based on indexName~color~name.
+	//  This will enable very efficient state range queries based on composite keys matching indexName~color~*
+	indexName := "fpid_i~cowner"
+	fpiIndexKey, err := stub.CreateCompositeKey(indexName, []string{FinishedGood.FPID, FinishedGood.Current_Owner})
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the user.
+	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	value := []byte{0x00}
+	stub.PutState(fpiIndexKey, value)
+
+	// ==== user saved and indexed. Return success ====
+	fmt.Println("- end init user")
+	return shim.Success(nil)
+}
+
+func (t *SimpleChaincode) makePurchaseOrder(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var err error
+
+//	Customer  		string `json:"customer"`				0
+//	Vendor   		string `json:"vendor"`					1	
+//	ProductID   	string `json:"productid"`				2
+//	Price       	string `json:"price"`					3
+//	Date        	string `json:"date"`					4
+//	ObjectType      string `json:"doctype"`					5
+	
+	
+	// ==== Input sanitation ====
+	
+	prodid := args[0]
+	cust := args[1]
+	vend := args[2]
+	price:= args[3]
+	dat := args[4]
+	class := args[5]
+
+	
+	// This wont matter once we implement UUID 
+	// ==== Check if product already exists ====
+	prodAsBytes, err := stub.GetState(prodid)		
+	if err != nil {
+		return shim.Error("Failed to get product: " + err.Error())
+	} else if prodAsBytes != nil {
+		fmt.Println("This product already exists: " + prodid)
+		return shim.Error("This product already exists: " + prodid)
+	}
+
+	// ==== Create user object and marshal to JSON ====
+	objectType := "PurchaseOrder"
+	PurchaseOrder := &PurchaseOrder{prodid, cust, vend, price, dat, class, objectType}
+	prodJSONasBytes, err := json.Marshal(PurchaseOrder)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	
+
+	// === Save user to state ===
+	err = stub.PutState(prodid, prodJSONasBytes)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	// ==== user saved and indexed. Return success ====
+	fmt.Println("- end init user")
+	return shim.Success(nil)
+}
+
+func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var err error
+
+	var key, value string
+	var err error
+	
+	var a = time.Now()
+	var b = a.Format("20060102150405") 
+	key = args[0] 
+	var body = args[2] //this will be the yes or no
+	value = args[1] + "-" + b +"-"+  key + " " + body
+
+
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+	
+	return shim.Success(nil)
+}
+
+
+
+
+
+
+//===========================================================================================================================================================================
+
+//																				Reading
+
+//===========================================================================================================================================================================
+
 
 func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var A string // Entities
