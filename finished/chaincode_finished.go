@@ -6,7 +6,7 @@ import (
 	"fmt"
 	//"strconv"
 	//"strings"
-	//"time"
+	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -405,7 +405,7 @@ func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, a
 	var err error
 
 	var key, value string
-	var err error
+	
 	
 	var a = time.Now()
 	var b = a.Format("20060102150405") 
@@ -416,7 +416,7 @@ func (t *SimpleChaincode) replyPurchaseOrder(stub shim.ChaincodeStubInterface, a
 
 	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
-		return nil, err
+		return shim.Error(err.Error())
 	}
 	
 	return shim.Success(nil)
